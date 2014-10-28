@@ -1,0 +1,8 @@
+<Bindings>
+  <Binding name="SRH_INTERRUPT" description="Toggle cast interrupt" header="SRH">
+    UseInterrupt();
+  </Binding>
+  <Binding name="SRH_AUTOAOE" description="Toggle Auto AOE" header="SRH">
+    AutoAOEToggle();
+  </Binding>
+</Bindings>

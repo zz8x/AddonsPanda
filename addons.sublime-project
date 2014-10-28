@@ -1,0 +1,13 @@
+{
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "rhlib5"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "rhshaman"
+		}
+	]
+}

@@ -1,0 +1,8 @@
+# ignore these
+/*/
+# except foo
+!.gitignore
+!/rhlib5/
+!/rhshaman/
+
+/addons.sublime-workspace

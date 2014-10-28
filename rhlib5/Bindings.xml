@@ -1,0 +1,14 @@
+<Bindings>
+  <Binding name="RHLIB_FACE" description="Face to target" header="RHLIB">
+    FaceToTarget(true)
+  </Binding>
+  <Binding name="RHLIB_OFF" description="Auto rotation OFF" header="RHLIB">
+    AutoRotationOff();
+  </Binding>
+  <Binding name="RHLIB_DEBUG" description="Toggle Debug Mode" header="RHLIB">
+    DebugToggle();
+  </Binding>
+  <Binding name="RHLIB_RELOAD" description="Reload UI" header="RHLIB">
+    ReloadUI();
+  </Binding>
+</Bindings>

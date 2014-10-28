@@ -1,0 +1,19 @@
+## Interface: 50400
+## Title: |cff0055ffRotation Helper|r|cffffe00a > |r|c00ff00ffLibrary 5|r
+## Author: Timofeev Alvexey
+## Version: 5.0
+## DefaultState: Disabled
+## LoadOnDemand: 1
+## SavedVariables: HarmfulCastingSpell, TrashList
+## SavedVariablesPerCharacter: Paused, Debug
+lib.lua
+misc.lua
+units.lua
+data.lua
+auras.lua
+runes.lua
+totems.lua
+spells.lua
+items.lua
+commands.lua
+binds.lua

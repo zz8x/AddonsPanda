@@ -1,0 +1,10 @@
+## Author: Timofeev Alvexey
+## Title:|cff0055ffRotation Helper|r|cffffe00a > |r|cff0000ffShaman|r 
+## Version: 2.0
+## DefaultState: Disabled
+## Interface: 50400
+## Dependencies: rhlib5
+## SavedVariablesPerCharacter: CanInterrupt, AutoAOE
+rotation.lua
+commands.lua
+binds.lua
