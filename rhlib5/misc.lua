@@ -73,6 +73,10 @@ end
 function TimerLess(name, less)
   return TimerElapsed(name) < (less or 0)
 end
+
+function TimerMore(name, less)
+  return TimerElapsed(name) > (less or 0)
+end
 ------------------------------------------------------------------------------------------------------------------
 if TrashList == nil then TrashList = {} end
 
@@ -111,7 +115,7 @@ function TemporaryAutoLoot(t)
     TimerStart("AutoLoot")
 end
 local function UpdateAutoLootTimer()
-    if TimerStarted("AutoLoot") and not TimerLess("AutoLoot", autoLootTimer)  then
+    if TimerStarted("AutoLoot") and TimerMore("AutoLoot", autoLootTimer)  then
         chat("Автолут OFF")
         RunMacroText("/console autoLootDefault 0")
         TimerReset("AutoLoot")

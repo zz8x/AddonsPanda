@@ -4,7 +4,7 @@
 ## Version: 5.0
 ## DefaultState: Disabled
 ## LoadOnDemand: 1
-## SavedVariables: HarmfulCastingSpell, TrashList
+## SavedVariables: HarmfulCastingSpell, TrashList, FriendList
 ## SavedVariablesPerCharacter: Paused, Debug
 lib.lua
 misc.lua

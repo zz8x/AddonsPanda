@@ -140,15 +140,7 @@ function TrySteal(targets)
         return stealTarget(targets)
     end
 end
-------------------------------------------------------------------------------------------------------------------
-function UpdateAutoFreedom(event, ...)
-    local timestamp, type, sourceGUID, sourceName, sourceFlags, destGUID, destName, destFlags, spellId, spellName, destFlag, err, dispel = select(1, ...)
-    if sourceGUID == UnitGUID("player") and (type:match("^SPELL_CAST") and spellId and spellName)
-        and err and err:match("Действие невозможно")  then
-            TimerStart("AntiFear")
-    end
-end
-AttachEvent("COMBAT_LOG_EVENT_UNFILTERED", UpdateAutoFreedom)
+
 ------------------------------------------------------------------------------------------------------------------
 function DoSpell(spell, target, mana)
     return UseSpell(spell, target, mana)

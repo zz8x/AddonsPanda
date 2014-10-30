@@ -55,18 +55,17 @@ function GetHealingMembers(units)
 end
 ------------------------------------------------------------------------------------------------------------------
 -- friend list
-local friendList = nil
 local function friendListUpdate()
-    if not friendList then 
+    if not FriendList then 
         ShowFriends()
-        friendList = {} 
+        FriendList = {} 
     end
-    wipe(friendList)
+    wipe(FriendList)
     local numberOfFriends = GetNumFriends()
     for i = 1, numberOfFriends do
         local name = GetFriendInfo(i);
         if name then 
-            tinsert(friendList, name)
+            tinsert(FriendList, name)
         end
     end
 end
@@ -74,17 +73,17 @@ friendListUpdate()
 AttachEvent("FRIENDLIST_UPDATE", friendListUpdate)
 
 function IsFriend(unit)
-    if not friendList then friendListUpdate() end
+    if not FriendList then friendListUpdate() end
     if IsOneUnit(unit, "player") then return true end
     if not UnitIsPlayer(unit) or not IsInteractUnit(unit) then return false end
-    return tContains(friendList, UnitName(unit))
+    return tContains(FriendList, UnitName(unit))
 end
 
 ------------------------------------------------------------------------------------------------------------------
 function GetTeammate()
-    if not friendList then friendListUpdate() end
-    for i = 1, #friendList do
-        local name = friendList[i];
+    if not FriendList or #FriendList < 1 then friendListUpdate() end
+    for i = 1, #FriendList do
+        local name = FriendList[i];
         if IsInteractUnit(name) then 
             return GetSameGroupUnit(name)
         end
@@ -423,7 +422,7 @@ function CheckDistance(unit1,unit2)
   local x1,y1,z1,rot1 = oinfo(unit) 
   local x2,y2,z2,rot2 = oinfo(unit2) 
   if x1 == 0 or y1 == 0 or x2 == 0 or y2 == 0 then return nil end
-  return sqrt( (x1-x2)^2 + (y1-y2)^2 )
+  return sqrt( (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2 )
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -432,6 +431,17 @@ function InDistance(unit1,unit2, distance)
   return not d or d < distance
 end
 
+------------------------------------------------------------------------------------------------------------------
+function PlayerFacingTarget(unit)
+    if not UnitExists(unit) or IsOneUnit("player",unit) then return false end
+
+    local x1,y1,_,facing = oinfo("player")
+    local x2,y2 = oinfo(unit)
+    local yawAngle = atan2(y1 - y2, x1 - x2) - deg(facing)
+    if yawAngle < 0 then yawAngle = yawAngle + 360 end
+
+    return yawAngle > 90 and yawAngle < 270
+end
 ------------------------------------------------------------------------------------------------------------------
 function InCombatMode()
     if IsValidTarget("target") then TimerStart('CombatTarget') end
@@ -489,7 +499,7 @@ function CheckTarget(useFocus , actualDistance)
         if UnitExists("target") then 
             oexecute("ClearTarget()")
         else
-            tryTarget = not TimerLess('TargetUnit', 0.3)
+            tryTarget = TimerMore('TargetUnit', 0.3)
         end
 
         if tryTarget then

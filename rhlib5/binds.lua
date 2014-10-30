@@ -1,4 +1,4 @@
-﻿-- Rotation Helper Library by Timofeev Alexey
+-- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
 -- l18n
 BINDING_HEADER_RHLIB = "Rotation Helper Library"
@@ -34,7 +34,7 @@ end
 ------------------------------------------------------------------------------------------------------------------
 function FaceToTarget(force)
     if not force and (IsMouselooking() or not PlayerInPlace()) then return end
-    if not TimerLess("FaceToTarget", 0.2) and IsValidTarget("target") then
+    if TimerMore("FaceToTarget", 0.2) and IsValidTarget("target") and not PlayerFacingTarget("target") then
         TimerStart("FaceToTarget")
         oface("target")
     end
