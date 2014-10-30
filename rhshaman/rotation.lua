@@ -224,6 +224,9 @@ function TryHeal()
         if hp < 40 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
     end
     if  PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
+        if not (IsArena() or InDuel()) then
+            if hp < 35 then UseHealPotion() end
+        end
         if hp < 40 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
         if hp < (IsCtr() and 99 or 50) then DoSpell("Исцеляющий всплеск", "player")  return true end
         if hp < 40 then return true end        

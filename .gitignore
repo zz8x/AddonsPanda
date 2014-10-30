@@ -4,5 +4,6 @@
 !.gitignore
 !/rhlib5/
 !/rhshaman/
+!/rhwarrior/
 
 /addons.sublime-workspace

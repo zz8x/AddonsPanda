@@ -8,6 +8,10 @@
 		{
 			"follow_symlinks": true,
 			"path": "rhshaman"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "rhwarrior"
 		}
 	]
 }
