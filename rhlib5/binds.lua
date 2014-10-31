@@ -105,10 +105,10 @@ end
 if Farm == nil then Farm = false end
 function FarmToggle()
     Farm = not Farm
-    if Debug then
-        echo("Режим отладки: ON",true)
+    if Farm then
+        echo("Режим фарма: ON",true)
     else
-        echo("Режим отладки: OFF",true)
+        echo("Режим фарма: OFF",true)
     end 
 end
 
@@ -157,6 +157,8 @@ local function compareTargets(t1,t2) return targetWeights[t1] < targetWeights[t2
 
 FastUpdate = false
 local rotateDir = true
+local lastLooted = nil
+local looted = false
 local function UpdateIdle(elapsed)
     FastUpdate = (elapsed < 0.1)
     if nil == oexecute then 
@@ -165,7 +167,7 @@ local function UpdateIdle(elapsed)
     end
 
     if IsFarm() then
-
+        if CanAttack("target") then looted = false end
         if IsAttack() then
             if TimerStarted('Rotate') then
                 if CanAttack("target") then
@@ -182,21 +184,30 @@ local function UpdateIdle(elapsed)
                 end
             else
                 if not UnitExists("target") then
-                    rotateDir = (random(0, 10) >= 2)
+                    rotateDir = (random(1, 100) > 10)
                     oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Start()')
                     TimerStart('Rotate')
                 end
             end
         end
 
-        if not UnitExists("target") and TimerLess('CombatTarget', 2) then
-            oexecute('TargetLastTarget()')
-        end 
+        if not looted then
 
-        if InMelee("target") and UnitExists("target") and not UnitIsPlayer("target") and UnitIsDead("target") then
-            TemporaryAutoLoot(10)
-            oexecute('InteractUnit("target")')
-        end    
+            if not UnitExists("target") and TimerLess('CombatTarget', 2) then
+                oexecute('TargetLastTarget()')
+                if UnitExists("target") and  lastLooted == UnitGUID("target") then
+                    oexecute("ClearTarget()")
+                end
+            end 
+
+            if UnitExists("target") and not UnitIsPlayer("target") and UnitIsDead("target") then
+                TemporaryAutoLoot(10)
+                oexecute('InteractUnit("target")')
+                looted = true
+                lastLooted = UnitGUID("target")
+            end    
+
+        end
 
         if not IsVisible("target") then 
             oexecute("TargetNearestEnemy()") 
@@ -205,6 +216,8 @@ local function UpdateIdle(elapsed)
         if IsMouse(3) and IsValidTarget("mouseover") and not IsOneUnit("target", "mouseover") then 
             oexecute('FocusUnit("mouseover")')
         end
+
+        if LootFrame:IsVisible() then CloseLoot()  end
     else
         if TimerStarted('Rotate') then
             oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Stop()')

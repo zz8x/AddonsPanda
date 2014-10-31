@@ -251,7 +251,7 @@ function IsNotAttack(target)
         if msg ~= "" then msg = msg .. "(Force!)" end
         stop = false
     end
-    if UnitExists("target") then
+    if IsValidTarget("target") then
         if stop then 
             if IsSpellInUse("Автоматическая атака") then oexecute("StopAttack()") end
         else

@@ -129,7 +129,7 @@ local function updateUseItemsFromList()
     if #useItemList < 1 then return end
     omacro("/use " .. tremove(useItemList, 1))
 end
-AttachUpdate(updateUseItemsFromList, 1)
+AttachUpdate(updateUseItemsFromList, 1.2)
 ------------------------------------------------------------------------------------------------------------------
 local function eachBagItems(func)
    for bag=0,NUM_BAG_SLOTS do

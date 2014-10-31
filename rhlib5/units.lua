@@ -1,4 +1,4 @@
-﻿-- Rotation Helper Library by Timofeev Alexey
+-- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
 -- Возвращает список членов группы отсортированных по приоритету исцеления
 local members = {}
@@ -460,9 +460,9 @@ function InCombatMode()
     if InCombatLockdown() then TimerStart('CombatLock') end
     if IsAttack() then return true end
     if TimerLess('CombatLock', 1) and TimerLess('CombatTarget', 3) then return true end
-    if Farm then
+    if IsFarm() then
         local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
-        if myHP > 60 and myMana > 60  then  
+        if myHP > 70 and myMana > 70  then  
             if TimerMore('Attack', 1) then TryAttack() end
             return true  
         end
@@ -477,6 +477,12 @@ end
 ------------------------------------------------------------------------------------------------------------------
 local checkHunter = false;
 function CheckTarget(useFocus , actualDistance)
+
+    if (not IsValidTarget("target") or not UnitAffectingCombat("target")) and not IsPvP() and UnitThreatSituation("player") == 3 then 
+        if UnitExists("target") then oexecute("ClearTarget()") end   
+        return 
+    end
+
     if not actualDistance then
         actualDistance = TargetActualDistance
     end

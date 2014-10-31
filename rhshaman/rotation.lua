@@ -24,7 +24,10 @@ function Idle()
     -- дайте поесть (побегать) спокойно 
     if not IsAttack() and (IsMounted() or CanExitVehicle() or HasBuff(peaceBuff)) then return end
     
-    if IsFarm() and PlayerInPlace() and not InCombatLockdown() and UnitMana100("player") < 30 and UseItem("Дамайча") then return end
+    if IsFarm() then
+        if PlayerInPlace() and not InCombatLockdown() and UnitMana100("player") < 60 and UseItem("Дамайча") then return end
+        InCombatMode()
+    end
 
     if not FastUpdate then
         teammate = GetTeammate()
@@ -305,7 +308,7 @@ function Rotation()
     if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target") and  DoSpell("Выброс лавы") then return end
     if DoSpell("Высвободить чары стихий") then return end
     if IsAOE() and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) then
-        if DoSpell("Цепная молния") then return end
+        if  DoSpell("Цепная молния") then return end
     else
         if DoSpell("Молния") then return end    
     end 

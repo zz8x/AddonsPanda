@@ -72,7 +72,8 @@ end
 
 
 function IsAOE()
-    if AutoAOE and InViewEnemyCount() > 2 then return true end    
+    if not IsShift() and UnitMana100("player") < 50 then return false end  
+    if AutoAOE and InViewEnemyCount() > 4 then return true end    
    return IsShift()
     or (AutoAOE and IsValidTarget("target") and IsValidTarget("focus") 
         and not IsOneUnit("target", "focus") 
