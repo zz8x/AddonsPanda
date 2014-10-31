@@ -287,7 +287,7 @@ function CanHeal(t)
         CanHealInfo = "В Смерче (имунна)"
         return false
     end
-    if olos(target) == 1 then
+    if not IsVisible(t) then
         CanHealInfo = "Вне поля зрения"
         return false
     end
@@ -432,6 +432,17 @@ function InDistance(unit1,unit2, distance)
 end
 
 ------------------------------------------------------------------------------------------------------------------
+function InViewEnemyCount() 
+    local count = 0 
+    local frames = {WorldFrame:GetChildren()} 
+    for _, frame in pairs(frames) do 
+        if frame:GetName() and frame:IsShown() and frame:GetName():find('NamePlate%d') then 
+            count = count + 1
+        end 
+    end 
+    return count 
+end
+------------------------------------------------------------------------------------------------------------------
 function PlayerFacingTarget(unit)
     if not UnitExists(unit) or IsOneUnit("player",unit) then return false end
 
@@ -444,10 +455,18 @@ function PlayerFacingTarget(unit)
 end
 ------------------------------------------------------------------------------------------------------------------
 function InCombatMode()
+
     if IsValidTarget("target") then TimerStart('CombatTarget') end
     if InCombatLockdown() then TimerStart('CombatLock') end
     if IsAttack() then return true end
     if TimerLess('CombatLock', 1) and TimerLess('CombatTarget', 3) then return true end
+    if Farm then
+        local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
+        if myHP > 60 and myMana > 60  then  
+            if TimerMore('Attack', 1) then TryAttack() end
+            return true  
+        end
+    end
     return false
 end
 ------------------------------------------------------------------------------------------------------------------
@@ -467,9 +486,9 @@ function CheckTarget(useFocus , actualDistance)
     else
         if checkHunter then
             oexecute("TargetLastTarget()")
-            if not IsValidTarget("target") then
+            if not CanAttack("target") then
                 checkHunter = false
-                if UnitExists("target") then execute("ClearTarget()") end   
+                if UnitExists("target") then oexecute("ClearTarget()") end   
             else
                 chat("Перевыбрали ханта")
                 TryAttack() 
@@ -504,7 +523,7 @@ function CheckTarget(useFocus , actualDistance)
 
         if tryTarget then
             TimerStart('TargetUnit')
-            if IsValidTarget("focus") and (not IsPvP() or UnitIsPlayer("focus")) then 
+            if CanAttack("focus") and (not IsPvP() or UnitIsPlayer("focus")) then 
                 oexecute('TargetUnit("focus")') 
             elseif IsPvP() then 
                 oexecute("TargetNearestEnemyPlayer()") 

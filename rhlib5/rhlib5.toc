@@ -5,7 +5,7 @@
 ## DefaultState: Disabled
 ## LoadOnDemand: 1
 ## SavedVariables: HarmfulCastingSpell, TrashList, FriendList
-## SavedVariablesPerCharacter: Paused, Debug
+## SavedVariablesPerCharacter: Paused, Debug, Farm
 lib.lua
 misc.lua
 units.lua

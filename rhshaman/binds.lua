@@ -72,6 +72,7 @@ end
 
 
 function IsAOE()
+    if AutoAOE and InViewEnemyCount() > 2 then return true end    
    return IsShift()
     or (AutoAOE and IsValidTarget("target") and IsValidTarget("focus") 
         and not IsOneUnit("target", "focus") 

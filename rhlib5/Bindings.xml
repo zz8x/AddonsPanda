@@ -11,4 +11,7 @@
   <Binding name="RHLIB_RELOAD" description="Reload UI" header="RHLIB">
     ReloadUI();
   </Binding>
+  <Binding name="RHLIB_FARM" description="Toggle Farm Mode" header="RHLIB">
+    FarmToggle();
+  </Binding>
 </Bindings>

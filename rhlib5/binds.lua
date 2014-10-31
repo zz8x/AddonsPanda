@@ -6,16 +6,18 @@ BINDING_NAME_RHLIB_FACE = "Лицом к Цели"
 BINDING_NAME_RHLIB_OFF = "Выкл ротацию"
 BINDING_NAME_RHLIB_DEBUG = "Вкл/Выкл режим отладки"
 BINDING_NAME_RHLIB_RELOAD = "Перезагрузить интерфейс"
+BINDING_NAME_RHLIB_FARM = "Вкл/Выкл режим фарма"
 ------------------------------------------------------------------------------------------------------------------
 -- Условие для включения ротации
-local attackTime = 0
 function TryAttack()
+    if Paused then return end
     TimerStart('Attack')
 end
 function IsAttack()
-    if (IsMouse(4)) then
+    if IsMouse(4) then
         TimerStart('Attack')
     end
+
     return TimerLess('Attack', 0.5)
 end
 
@@ -88,18 +90,32 @@ function DebugToggle()
     if Debug then
         debugFrame:Show()
         SetCVar("scriptErrors", 1)
-        UIErrorsFrame:RegisterEvent("UI_ERROR_MESSAGE");
+        --UIErrorsFrame:RegisterEvent("UI_ERROR_MESSAGE");
         SetCVar("Sound_EnableErrorSpeech", "1");
         echo("Режим отладки: ON",true)
     else
         debugFrame:Hide()
         SetCVar("scriptErrors", 0)
-        UIErrorsFrame:UnregisterEvent("UI_ERROR_MESSAGE");
+        --UIErrorsFrame:UnregisterEvent("UI_ERROR_MESSAGE");
         SetCVar("Sound_EnableErrorSpeech", "0");
         echo("Режим отладки: OFF",true)
     end 
 end
+------------------------------------------------------------------------------------------------------------------
+if Farm == nil then Farm = false end
+function FarmToggle()
+    Farm = not Farm
+    if Debug then
+        echo("Режим отладки: ON",true)
+    else
+        echo("Режим отладки: OFF",true)
+    end 
+end
 
+
+function IsFarm()
+    return Farm  and not (IsMouselooking() or not PlayerInPlace())
+end
 ------------------------------------------------------------------------------------------------------------------
 function UpdateInternal()
     if (IsAttack() and Paused) then
@@ -137,19 +153,65 @@ end
 local targetWeights = {}
 local function compareTargets(t1,t2) return targetWeights[t1] < targetWeights[t2] end
 
+
+
 FastUpdate = false
+local rotateDir = true
 local function UpdateIdle(elapsed)
     FastUpdate = (elapsed < 0.1)
     if nil == oexecute then 
-        echo("Требуется магичексое действие!!!", true) 
+        echo("Требуется магичеcкое действие!!!", true) 
         return 
     end
 
-    if not IsAttack() and LootFrame:IsVisible() then return end
-    
-    if IsMouse(3) and IsValidTarget("mouseover") and not IsOneUnit("target", "mouseover") then 
-        oexecute('FocusUnit("mouseover")')
+    if IsFarm() then
+
+        if IsAttack() then
+            if TimerStarted('Rotate') then
+                if CanAttack("target") then
+                    oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Stop()')
+                    TimerReset('Rotate')
+                end
+
+                if TimerMore('Rotate', 0.3) then
+                    oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Stop()')
+                end
+
+                if TimerMore('Rotate', 3) then
+                    TimerReset('Rotate')
+                end
+            else
+                if not UnitExists("target") then
+                    rotateDir = (random(0, 10) >= 2)
+                    oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Start()')
+                    TimerStart('Rotate')
+                end
+            end
+        end
+
+        if not UnitExists("target") and TimerLess('CombatTarget', 2) then
+            oexecute('TargetLastTarget()')
+        end 
+
+        if InMelee("target") and UnitExists("target") and not UnitIsPlayer("target") and UnitIsDead("target") then
+            TemporaryAutoLoot(10)
+            oexecute('InteractUnit("target")')
+        end    
+
+        if not IsVisible("target") then 
+            oexecute("TargetNearestEnemy()") 
+        end
+        
+        if IsMouse(3) and IsValidTarget("mouseover") and not IsOneUnit("target", "mouseover") then 
+            oexecute('FocusUnit("mouseover")')
+        end
+    else
+        if TimerStarted('Rotate') then
+            oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Stop()')
+            TimerReset('Rotate')
+        end
     end
+    if not IsAttack() and LootFrame:IsVisible() then return end
 
     if UpdateCommands() then return end
     

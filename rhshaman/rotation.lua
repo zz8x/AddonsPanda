@@ -1,6 +1,9 @@
 -- Shaman Rotation Helper by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------
+local function actualDistance(target)
+    return InRange("Молния", target)
+end 
 local peaceBuff = {"Пища", "Питье", "Призрачный волк"}
 local teammate = nil
 function Idle()
@@ -16,9 +19,13 @@ function Idle()
         if IsMounted() then Dismount() return end 
     end
 
+
+
     -- дайте поесть (побегать) спокойно 
     if not IsAttack() and (IsMounted() or CanExitVehicle() or HasBuff(peaceBuff)) then return end
     
+    if IsFarm() and PlayerInPlace() and not InCombatLockdown() and UnitMana100("player") < 30 and UseItem("Дамайча") then return end
+
     if not FastUpdate then
         teammate = GetTeammate()
     end
@@ -40,7 +47,7 @@ function Idle()
     end
 
 	if InCombatMode() then
-        CheckTarget()
+        CheckTarget(true, actualDistance)
         Rotation()
         return
     end
@@ -253,6 +260,13 @@ function Rotation()
 
     if not HasBuff("Щит молний") and DoSpell("Щит молний") then return end
     
+    if IsFarm() and InCombatLockdown() then
+        if UnitMana100("player") < 60 and DoSpell("Гром и молния") then return end
+        if not HasTotem(1) and DoSpell("Тотем магмы") then return end
+        if not HasTotem(2) and DoSpell("Тотем элементаля земли") then return end
+    end
+
+
     if IsNotAttack("target") then return end
 
     if not CanAttack() then return end

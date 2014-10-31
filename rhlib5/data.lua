@@ -114,7 +114,7 @@ function CanAttack(target)
         CanAttackInfo = IsValidTargetInfo
         return false
     end
-    if olos(target) == 1 then
+    if not IsVisible(target) then
         CanAttackInfo = "Цель в лосе."
         return false
     end

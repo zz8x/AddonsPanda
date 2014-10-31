@@ -109,7 +109,7 @@ function TemporaryAutoLoot(t)
     autoLootTimer = t or 2
     if not TimerStarted("AutoLoot") then
         chat("Автолут ON")
-        RunMacroText("/console autoLootDefault 1")
+        omacro("/console autoLootDefault 1")
 
     end
     TimerStart("AutoLoot")
@@ -117,7 +117,7 @@ end
 local function UpdateAutoLootTimer()
     if TimerStarted("AutoLoot") and TimerMore("AutoLoot", autoLootTimer)  then
         chat("Автолут OFF")
-        RunMacroText("/console autoLootDefault 0")
+        omacro("/console autoLootDefault 0")
         TimerReset("AutoLoot")
     end
 end
@@ -224,4 +224,5 @@ function BuyItem(name, count)
       BuyMerchantItem(idx,(q > maxStack and maxStack or q))
     end
 end
+
 ------------------------------------------------------------------------------------------------------------------
