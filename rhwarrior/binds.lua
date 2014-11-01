@@ -24,14 +24,19 @@ local function interruptTarget(target, canStopCasting)
     if not spell then return false end
     if not notinterrupt and not IsInterruptImmune(target) then
 
-        --[[if (channel or t < 0.8) and IsReadySpell("Пронизывающий ветер") and InRange("Пронизывающий ветер", target) then
+        if (channel or t < 0.8) and IsReadySpell("Зуботычина") or IsReadySpell("Отражение заклинания") then
             if canStopCasting then oexecute("SpellStopCasting()") end
-            if DoSpell("Пронизывающий ветер", target) then
-                echo("Пронизывающий ветер"..m)
+            if InMelee("target") and DoSpell("Зуботычина", target) then
+                echo("Зуботычина"..m)
                 TimerStart('Interrupt')
                 return true 
             end
-        end]]
+            if not InMelee("target") and DoSpell("Отражение заклинания") then
+                echo("Отражение"..m)
+                TimerStart('Interrupt')
+                return true 
+            end  
+        end
 
     end
     return false 
