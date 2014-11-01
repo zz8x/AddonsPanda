@@ -209,3 +209,16 @@ SetCommand("fix",
         return false
     end
 )
+
+
+------------------------------------------------------------------------------------------------------------------
+SetCommand("rain", 
+    function() 
+        if DoSpell("Целительный ливень", false) then
+            echo("Целительный ливень!", 1)
+        end
+    end, 
+    function() 
+        return not IsReadySpell("Целительный ливень") or SpellIsTargeting() or IsSpellInUse("Целительный ливень")
+    end
+)

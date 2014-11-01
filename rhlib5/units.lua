@@ -460,13 +460,13 @@ function InCombatMode()
     if InCombatLockdown() then TimerStart('CombatLock') end
     if IsAttack() then return true end
     if TimerLess('CombatLock', 1) and TimerLess('CombatTarget', 3) then return true end
-    if IsFarm() then
+    --[[if IsFarm() then
         local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
-        if myHP > 70 and myMana > 70  then  
+        if myHP > 60 and myMana > 60  then  
             if TimerMore('Attack', 1) then TryAttack() end
             return true  
         end
-    end
+    end]]
     return false
 end
 ------------------------------------------------------------------------------------------------------------------
@@ -577,7 +577,7 @@ local freedomItem = nil
 local freedomSpell = "Каждый за себя"
 function IsReadyFreedom()
     if freedomItem == nil then
-       freedomItem = (UnitFactionGroup("player") == "Horde" and "Медальон Орды" or "Медальон Альянса")
+       freedomItem = (UnitFactionGroup("player") == "Horde" and "Медальон Орды" or "Искусно изготовленный медальон упорства злонравного гладиатора")
     end
     return HasSpell(freedomSpell) and IsReadySpell(freedomSpell) or IsReadyItem(freedomItem) 
 end

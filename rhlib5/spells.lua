@@ -320,24 +320,23 @@ end
 ------------------------------------------------------------------------------------------------------------------
 local badSpellTarget = {}
 function UseSpell(spellName, target)
-    if SpellIsTargeting() then 
-        oclick(target)
-        oexecute("SpellStopTargeting()")
-    end
-    local dump = false --spellName == "Исцеляющий всплеск"
-    if dump then print("Пытаемся прожать", spellName, "на", target) end
-    -- Не мешаем выбрать область для спела (нажат вручную)
-    if SpellIsTargeting() then 
-        if dump or true then print("Ждем выбор цели, не можем прожать", spellName) end
-        SpellStopTargeting()
-        return false 
-    end 
+
+    local dump = false --spellName == "Целительный ливень"
+    
     -- Не пытаемся что либо прожимать во время каста
     if IsPlayerCasting() then 
         if dump then print("Кастим, не можем прожать", spellName) end
         return false 
     end
-    if target == nil and IsHarmfulSpell(spellName) then target = "target" end
+    local manual = target == false;
+    if manual then target = nil end
+    if target == nil then target = IsHarmfulSpell(spellName) and "target" or "player" end
+    if dump then print("Пытаемся прожать", spellName, "на", target) end
+    if SpellIsTargeting() then 
+        -- Не мешаем выбрать область для спела (нажат вручную)
+        if dump or true then print("Ждем выбор цели, не можем прожать", spellName) end
+        return false
+    end
     -- Проверяем на наличе спела в спелбуке
     local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange  = GetSpellInfo(spellName)
     if not name then
@@ -396,7 +395,7 @@ function UseSpell(spellName, target)
     --if Debug then print("Жмем", cast .. "!" .. spellName) end
     omacro(cast .. "!" .. spellName)
     -- если нужно выбрать область - кидаем на текущий mouseover
-    if SpellIsTargeting() then 
+    if SpellIsTargeting() and not manual then 
         oclick(target)
     end
     if dump then print("Спел вроде прожался", spellName) end

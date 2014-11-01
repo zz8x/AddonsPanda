@@ -153,11 +153,7 @@ end
 local targetWeights = {}
 local function compareTargets(t1,t2) return targetWeights[t1] < targetWeights[t2] end
 
-
-
 FastUpdate = false
-local rotateDir = true
-local lastLooted = nil
 local looted = false
 local function UpdateIdle(elapsed)
     FastUpdate = (elapsed < 0.1)
@@ -168,62 +164,26 @@ local function UpdateIdle(elapsed)
 
     if IsFarm() then
         if CanAttack("target") then looted = false end
-        if IsAttack() then
-            if TimerStarted('Rotate') then
-                if CanAttack("target") then
-                    oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Stop()')
-                    TimerReset('Rotate')
-                end
-
-                if TimerMore('Rotate', 0.3) then
-                    oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Stop()')
-                end
-
-                if TimerMore('Rotate', 3) then
-                    TimerReset('Rotate')
-                end
-            else
-                if not UnitExists("target") then
-                    rotateDir = (random(1, 100) > 10)
-                    oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Start()')
-                    TimerStart('Rotate')
-                end
-            end
-        end
-
+        
         if not looted then
-
             if not UnitExists("target") and TimerLess('CombatTarget', 2) then
                 oexecute('TargetLastTarget()')
-                if UnitExists("target") and  lastLooted == UnitGUID("target") then
-                    oexecute("ClearTarget()")
-                end
             end 
 
             if UnitExists("target") and not UnitIsPlayer("target") and UnitIsDead("target") then
-                TemporaryAutoLoot(10)
+                TemporaryAutoLoot(2)
                 oexecute('InteractUnit("target")')
                 looted = true
-                lastLooted = UnitGUID("target")
             end    
-
-        end
-
-        if not IsVisible("target") then 
-            oexecute("TargetNearestEnemy()") 
-        end
-        
-        if IsMouse(3) and IsValidTarget("mouseover") and not IsOneUnit("target", "mouseover") then 
-            oexecute('FocusUnit("mouseover")')
         end
 
         if LootFrame:IsVisible() then CloseLoot()  end
-    else
-        if TimerStarted('Rotate') then
-            oexecute('Turn'.. (rotateDir and 'Right' or 'Left') .. 'Stop()')
-            TimerReset('Rotate')
-        end
     end
+
+    if IsMouse(3) and IsValidTarget("mouseover") and not IsOneUnit("target", "mouseover") then 
+        oexecute('FocusUnit("mouseover")')
+    end
+
     if not IsAttack() and LootFrame:IsVisible() then return end
 
     if UpdateCommands() then return end

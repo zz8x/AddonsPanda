@@ -24,10 +24,10 @@ function Idle()
     -- дайте поесть (побегать) спокойно 
     if not IsAttack() and (IsMounted() or CanExitVehicle() or HasBuff(peaceBuff)) then return end
     
-    if IsFarm() then
+    --[[if IsFarm() then
         if PlayerInPlace() and not InCombatLockdown() and UnitMana100("player") < 60 and UseItem("Дамайча") then return end
         InCombatMode()
-    end
+    end]]
 
     if not FastUpdate then
         teammate = GetTeammate()
@@ -266,7 +266,7 @@ function Rotation()
     if IsFarm() and InCombatLockdown() then
         if UnitMana100("player") < 60 and DoSpell("Гром и молния") then return end
         if not HasTotem(1) and DoSpell("Тотем магмы") then return end
-        if not HasTotem(2) and DoSpell("Тотем элементаля земли") then return end
+        --if not HasTotem(2) and DoSpell("Тотем элементаля земли") then return end
     end
 
 
@@ -295,9 +295,11 @@ function Rotation()
     end
 
     if InCombatLockdown() then
-        if UseEquippedItem("Талисман стрел разума") then return end
-        if UseEquippedItem("Знак отличия Властелина Земли") then return end
+        --if UseEquippedItem("Талисман стрел разума") then return end
+        --if UseEquippedItem("Знак отличия Властелина Земли") then return end
         if DoSpell("Покорение стихий") then return end
+        if DoSpell("Удар духов стихии") then return end
+        if DoSpell("Высвободить чары стихий") then return end
     end
 
     --[[if IsReadySpell("Опаляющий тотем") then
@@ -305,8 +307,11 @@ function Rotation()
             return
     end]]
 
-    if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target") and  DoSpell("Выброс лавы") then return end
-    if DoSpell("Высвободить чары стихий") then return end
+    if UnitMana100("player") > 30 and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target")  then
+        if DoSpell("Выброс лавы") then return end
+        if IsReadySpell("Выброс лавы") then return end
+    end
+    
     if IsAOE() and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) then
         if  DoSpell("Цепная молния") then return end
     else
