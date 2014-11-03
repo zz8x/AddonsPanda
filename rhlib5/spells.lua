@@ -334,8 +334,11 @@ function UseSpell(spellName, target)
     if dump then print("Пытаемся прожать", spellName, "на", target) end
     if SpellIsTargeting() then 
         -- Не мешаем выбрать область для спела (нажат вручную)
-        if dump or true then print("Ждем выбор цели, не можем прожать", spellName) end
+        if dump then print("Ждем выбор цели, не можем прожать", spellName) end
+        if TimerStarted('Manual') and TimerMore('Manual', 3) then oexecute('SpellStopTargeting()') end
         return false
+    else
+        TimerReset('Manual')
     end
     -- Проверяем на наличе спела в спелбуке
     local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange  = GetSpellInfo(spellName)
@@ -395,9 +398,15 @@ function UseSpell(spellName, target)
     --if Debug then print("Жмем", cast .. "!" .. spellName) end
     omacro(cast .. "!" .. spellName)
     -- если нужно выбрать область - кидаем на текущий mouseover
-    if SpellIsTargeting() and not manual then 
-        oclick(target)
+    if SpellIsTargeting() then 
+        if manual then
+            TimerStart('Manual')
+        else
+            oclick(target)
+            oexecute('SpellStopTargeting()')
+        end
     end
+
     if dump then print("Спел вроде прожался", spellName) end
     local castInfo = getCastInfo(spellName)
         -- проверка на успешное начало кд

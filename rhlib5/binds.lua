@@ -116,14 +116,7 @@ end
 function IsFarm()
     return Farm  and not (IsMouselooking() or not PlayerInPlace())
 end
-------------------------------------------------------------------------------------------------------------------
-function UpdateInternal()
-    if (IsAttack() and Paused) then
-        echo("Авто ротация: ON",true)
-        Paused = false
-    end
-end
-AttachUpdate(UpdateInternal, 0.025)
+
 ------------------------------------------------------------------------------------------------------------------
 -- Вызывает функцию Idle если таковая имеется, с заданным рекомендованным интервалом UpdateInterval, 
 -- при включенной Авто-ротации
@@ -155,8 +148,8 @@ local function compareTargets(t1,t2) return targetWeights[t1] < targetWeights[t2
 
 FastUpdate = false
 local looted = false
-local function UpdateIdle(elapsed)
-    FastUpdate = (elapsed < 0.1)
+function UpdateIdle(elapsed)
+    
     if nil == oexecute then 
         echo("Требуется магичеcкое действие!!!", true) 
         return 
@@ -235,8 +228,6 @@ local function UpdateIdle(elapsed)
 
     if Idle then Idle() end
 end
-AttachUpdate(UpdateIdle, 0.02)
-AttachUpdate(UpdateIdle, 0.5)
 ------------------------------------------------------------------------------------------------------------------
 local function UpdateMacroAlertHider()
     if StaticPopup1Button2:IsVisible() == 1 and StaticPopup1Button2:IsEnabled() == 1 and StaticPopup1Button2:GetText() == "Пропустить" then

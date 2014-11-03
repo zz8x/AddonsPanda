@@ -7,6 +7,7 @@ end
 local peaceBuff = {"Пища", "Питье", "Призрачный волк"}
 local teammate = nil
 function Idle()
+
     if InControl("player", 5) and IsReadySpell("Тотем трепета") then
         if HasTotem(2) ~= "Тотем трепета" and DoSpell("Тотем трепета") then return end
         return
@@ -57,7 +58,6 @@ function Idle()
 end
 
 local attackCasts = {"Молния", "Цепная молния", "Выброс лавы"}
-local rUnit, rCount =  nil, 0
 function HealRotation()
     local members = GetHealingMembers(UNITS)
     if #members < 1 then return false end
@@ -65,6 +65,10 @@ function HealRotation()
     local h = UnitHealth100(u)
     local l = UnitLostHP(u)
 
+    if h < 40 then
+        local spell = UnitCastingInfo("player")
+        if spell and tContains(attackCasts, spell) then oexecute("SpellStopCasting()") end
+    end
 
     if HasBuff("Стремительность предков") then
         if DoSpell("Великая волна исцеления", u) then return end
@@ -88,50 +92,52 @@ function HealRotation()
     if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
 
     local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
-    local unitWithShield, threatLowHPUnit, threatLowHP = nil, "player", 1000
-    if (myMana > 50 and myHP < 40) then
-       threatLowHP = myHP  
-    else
-        for i=1,#members do 
-            local u = members[i]
-            local h = UnitHealth100(u)
-            if HasMyBuff("Щит земли", 5, u) then unitWithShield = u end
-            if (UnitThreatAlert(u) == 3) and (h < threatLowHP) and (not IsOneUnit(u, "player")) then
-               threatLowHPUnit = u  
-               threatLowHP = h 
-            end
-        end 
+    local unitWithShield, threatLowHPUnit, threatLowHP, notfullhpmembers = nil, nil, 1000, 0
+
+    for i=1,#members do 
+        local u = members[i]
+        local h = UnitHealth100(u)
+        if HasMyBuff("Щит земли", 5, u) then unitWithShield = u end
+        if (UnitThreatAlert(u) == 3) and (h < threatLowHP) and (not IsOneUnit(u, "player")) then
+           threatLowHPUnit = u  
+           threatLowHP = h 
+        end
+        if h < 90 then notfullhpmembers = notfullhpmembers + 1 end
     end
 
-    
-    if unitWithShield and not IsOneUnit(unitWithShield, threatLowHPUnit) and UnitThreatAlert(unitWithShield) < 3 and (threatLowHP < 70) then
-        TimerReset("Shield")
-        unitWithShield = nil
+    if myHP < 40 then
+       threatLowHP = myHP
+       threatLowHPUnit = "player"  
     end
-    
-    if not unitWithShield and TimerMore("Shield", 2) and DoSpell("Щит земли", threatLowHPUnit) then 
-        TimerStart("Shield")
-        return 
+
+    if  threatLowHPUnit then
+        if unitWithShield and not IsOneUnit(unitWithShield, threatLowHPUnit) and UnitThreatAlert(unitWithShield) < 3 and (threatLowHP < 70) then
+            TimerReset("Shield")
+            unitWithShield = nil
+        end
+        
+        if not unitWithShield and TimerMore("Shield", 2) and DoSpell("Щит земли", threatLowHPUnit) then 
+            TimerStart("Shield")
+            return 
+        end
+        
+        if unitWithShield and not IsOneUnit(unitWithShield, threatLowHPUnit) and threatLowHP < 65 and TimerMore("Shield", 4) and DoSpell("Щит земли", threatLowHPUnit) then 
+            TimerStart("Shield")
+            return
+        end
     end
-    
-    if unitWithShield and not IsOneUnit(unitWithShield, threatLowHPUnit) and threatLowHP < 65 and TimerMore("Shield", 4) and DoSpell("Щит земли", threatLowHPUnit) then 
-        TimerStart("Shield")
-        return
-    end
-    
 
     if HasSpell("Быстрина") and IsReadySpell("Быстрина") then
         for i=1,#members do
             local u = members[i]
-            if UnitHealth100(u) < (HasMyBuff("Быстрина", 1 , u) and 50 or 95) and DoSpell("Быстрина", u) then return end
+            if UnitHealth100(u) < (HasMyBuff("Быстрина", 1 , u) and 50 or 100) and DoSpell("Быстрина", u) then return end
         end
     end
 
-    if h < 95 and DoSpell("Высвободить чары стихий", u) then return end
+    if h < 100 and DoSpell("Высвободить чары стихий", u) then return end
 
-    local overheal =  0.3
-    local GreatHealingWaveHeal = GetSpellAmount("Великая волна исцеления", 12000) * overheal
-    local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000) * overheal
+    local GreatHealingWaveHeal = GetSpellAmount("Великая волна исцеления", 12000)
+    local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000)
 
     if InCombatLockdown() then
         if l > GreatHealingWaveHeal and UseEquippedItem("Талисман стрел разума") then return end
@@ -154,56 +160,27 @@ function HealRotation()
             else
                 if DoSpell("Молния") then return end    
             end 
-
         end
     end
 
-    if h < 40 then
-        local spell = UnitCastingInfo("player")
-        if spell and tContains(attackCasts, spell) then oexecute("SpellStopCasting()") end
-    end
+
 
     
     if PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
-                    
+                        
         if h < 38 and DoSpell("Исцеляющий всплеск", u) then return end
 
-        if FastUpdate then
-            if not CanHeal(rUnit) then
-                rUnit, rCount = nil, 0    
-            end
-        else
-            rUnit, rCount = nil, 0
-            for i=1,#members do 
-                local u1, c = members[i], 0
-                if UnitHealth100(u1) < 95 then
-                    for j=1,#members do
-                        local u2 = members[j]
-                        if UnitHealth100(u2) < 95 then
-                            local d = CheckDistance(u1, u2) or 100
-                            if d < 10  then c = c + 1 end 
-                        end
-                    end
-                    if rCount < c then 
-                        rUnit = u1
-                        rCount = c
-                    end
-                end
-            end 
-        end
-
-        if h > 50 and rCount > 1 and DoSpell("Цепное исцеление", rUnit) then return end
+        if notfullhpmembers > 2 and DoSpell("Цепное исцеление", u) then return end
 
         if (l > GreatHealingWaveHeal) then
             if HasMyBuff("Приливные волны", 1.5, "player") and DoSpell("Великая волна исцеления", u) then return end
         else
             if (l > HealingWaveHeal) and DoSpell("Волна исцеления", u) then return end 
         end
-
         
         if h < 100 and IsCtr() then
-            if rCount > 1 then
-                if DoSpell("Цепное исцеление", rUnit) then return end 
+            if notfullhpmembers > 1 then
+                if DoSpell("Цепное исцеление", u) then return end 
             else
                 if DoSpell("Волна исцеления", u) then return end
             end
@@ -219,11 +196,10 @@ function HealRotation()
     if not IsAttack() and h > 50 and IsPvP() then
         for i = 1, #ITARGETS do
             local t = ITARGETS[i]
-            if CanControl(t) and UnitIsPlayer(t) and not HasDebuff("Ледяной шок", 0.1, t) and DoSpell("Ледяной шок", t) then return  end
+            if CanControl(t) and UnitIsPlayer(t) and not HasDebuff("Ледяной шок", 0.1, t) and DoSpell("Ледяной шок", t) then return end
         end
     end
 end
-
 
 function TryHeal()
     local hp = UnitHealth100("player")

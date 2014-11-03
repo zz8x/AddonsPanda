@@ -78,7 +78,7 @@ function IsAOE()
     or (AutoAOE and IsValidTarget("target") and IsValidTarget("focus") 
         and not IsOneUnit("target", "focus") 
         and UnitAffectingCombat("focus") and UnitAffectingCombat("target"))
-        and InDistance("target", "focus", 8)
+        
 end
 ------------------------------------------------------------------------------------------------------------------
 local dispelSpell = "Очищение духа"
