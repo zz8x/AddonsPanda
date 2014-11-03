@@ -31,13 +31,17 @@ local function interruptTarget(target, canStopCasting)
                 TimerStart('Interrupt')
                 return true 
             end
-            if not InMelee("target") and DoSpell("Отражение заклинания") then
-                echo("Отражение"..m)
-                TimerStart('Interrupt')
-                return true 
-            end  
         end
 
+        if (not channel and t < 1.8) and not InMelee("target") and IsReadySpell("Отражение заклинания", true) and IsHarmfulCast(spell) then
+            if canStopCasting  then oexecute("SpellStopCasting()") end
+            if DoSpell("Отражение заклинания") then
+                TimerStart('Interrupt')
+                echo("Отражение"..m)
+                return true 
+            end
+        end
+        
     end
     return false 
 end
