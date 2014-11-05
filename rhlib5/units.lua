@@ -418,7 +418,6 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 function CheckDistance(unit1,unit2)
-    error("CheckDistance")
   if IsOneUnit(unit1,unit2) then return 0 end
   local x1,y1,z1,rot1 = oinfo(unit) 
   local x2,y2,z2,rot2 = oinfo(unit2) 

@@ -60,36 +60,45 @@ SetCommand("fear",
   function()
 
     if IsReadySpell("Издевательское знамя") then
+        chat("UnRoot Издевательское знамя!")
         DoSpell("Издевательское знамя", "target")
         return
     end
 
     local name = UnitName("target")
-    if name == nil or not sContains(name, "знамя") then
+    if name ~= "Издевательское знамя" then
+        chat("UnRoot выбор знамени!")
         omacro("/target Издевательское знамя")
         return
     end
  
     if IsReadySpell("Охрана") then
+        chat("UnRoot Охрана!")
         DoSpell("Охрана", "target")
         return
     else
+        chat("UnRoot возврат цели!")
         oexecute('TargetLastTarget()') 
         TimerStart('UnRootSucces')   
     end
 
   end, 
   function() 
-    if TimerLess('UnRootSucces', 1) then return true end
+    if TimerLess('UnRootSucces', 1) then 
+        chat("UnRootSucces!")
+        return true 
+    end
 
     if TimerMore('UnRoot', 3) then
         if IsReadySpell("Охрана") and InRange("Охрана", "target") and IsReadySpell("Издевательское знамя") then
             TimerStart('UnRoot')
+            chat("UnRootStart!")
             return false
         end
+        chat("UnRootFail!")
         return true
     end
-    
+
     return false 
   end
 )

@@ -318,9 +318,13 @@ function GetSpellAmount(spellName, expected)
 end
 
 ------------------------------------------------------------------------------------------------------------------
+local fix_oclick = false
 local badSpellTarget = {}
 function UseSpell(spellName, target)
-
+    if not fix_oclick then
+        oinfo("player") -- fix oclick
+        fix_oclick = true        
+    end
     local dump = false --spellName == "Целительный ливень"
     
     -- Не пытаемся что либо прожимать во время каста
