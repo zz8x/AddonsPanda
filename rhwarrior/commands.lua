@@ -29,7 +29,7 @@ SetCommand("disarm",
         end
     end, 
     function(target) 
-        return not CanControl(target) or HasDebuff("Обезоруживание", 0,1, target) or not IsSpellNotUsed("Обезоруживание", 1) 
+        return HasDebuff("Обезоруживание", 0,1, target) or not IsSpellNotUsed("Обезоруживание", 1) 
     end
 )
 ------------------------------------------------------------------------------------------------------------------
@@ -50,6 +50,28 @@ SetCommand("fear",
   end, 
   function(target) 
     --if target == nil then target = "target" end
+    if (not InGCD() and not IsSpellNotUsed("Охрана",1)) then return true end
+    return false 
+  end
+)
+------------------------------------------------------------------------------------------------------------------
+ SetCommand("unroot", 
+  function()
+    if IsReadySpell("Издевательское знамя") and InRange("Охрана", target) and DoSpell("Издевательское знамя", target) then
+        echo("Портал установлен", 1)
+    end
+
+    if RunMacroText("/target Издевательское знамя") then
+        echo("Портал выбран", 1)
+    end
+
+    if DoSpell("Охрана") then
+        echo("Телепортация прошла успешно", 1)
+        RunMacroText("/targetlastenemy")
+    end
+  end, 
+  function() 
+    if target == nil then target = "target" end
     if (not InGCD() and not IsSpellNotUsed("Охрана",1)) then return true end
     return false 
   end

@@ -79,6 +79,7 @@ function Rotation()
         if HasBuff("Командирский крик") and DoSpell("Боевой крик") then return end
         return
     end 
+    if DoSpell("Боевой крик") then return end
 
     --if DoSpell("Молния") then return end    
 end
