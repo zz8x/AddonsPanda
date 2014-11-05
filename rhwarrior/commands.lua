@@ -50,7 +50,7 @@ SetCommand("fear",
   end, 
   function(target) 
     --if target == nil then target = "target" end
-    if (not InGCD() and not IsSpellNotUsed("Охрана",1)) then return true end
+    if not IsReadySpell("Охрана") then return true end
     return false 
   end
 )
@@ -61,18 +61,19 @@ SetCommand("fear",
         echo("Портал установлен", 1)
     end
 
-    if RunMacroText("/target Издевательское знамя") then
+    if omacro("/target Издевательское знамя") then
         echo("Портал выбран", 1)
-    end
-
-    if DoSpell("Охрана") then
-        echo("Телепортация прошла успешно", 1)
-        RunMacroText("/targetlastenemy")
     end
   end, 
   function() 
     if target == nil then target = "target" end
-    if (not InGCD() and not IsSpellNotUsed("Охрана",1)) then return true end
+    if not IsReadySpell("Охрана") then 
+        if UnitExists("target") and sContains(UnitName("target"), "знамя") then
+            echo("Телепортация прошла успешно", 1)
+            oexecute('TargetLastTarget()')
+        end
+        return true 
+    end
     return false 
   end
 )
