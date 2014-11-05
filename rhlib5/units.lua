@@ -479,8 +479,7 @@ end
 local checkHunter = false;
 function CheckTarget(useFocus , actualDistance)
 
-    if (not IsValidTarget("target") or not UnitAffectingCombat("target")) and not IsPvP() and UnitThreatSituation("player") == 3 then 
-        if UnitExists("target") then oexecute("ClearTarget()") end   
+    if not IsPvP() and not IsValidTarget("target")  and UnitThreatSituation("player") == 3 then 
         return 
     end
 

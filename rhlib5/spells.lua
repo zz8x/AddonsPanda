@@ -415,7 +415,7 @@ function UseSpell(spellName, target)
                 -- проверяем цель на соответствие реальной
                 if castInfo.TargetName and castInfo.TargetName ~= "" and castInfo.TargetName ~= UnitName(target) then 
                     if dump then print("Цели не совпали", spellName) end
-                    RunMacroText("/stopcasting") 
+                    oexecute("SpellStopCasting()")
                     --chat("bad target", target, spellName)
                     if nil == badSpellTarget[spellName] then
                         badSpellTarget[spellName] = {}

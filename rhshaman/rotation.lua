@@ -111,18 +111,17 @@ function HealRotation()
     end
 
     if  threatLowHPUnit then
+        local force = false
         if unitWithShield and not IsOneUnit(unitWithShield, threatLowHPUnit) and UnitThreatAlert(unitWithShield) < 3 and (threatLowHP < 70) then
-            TimerReset("Shield")
+            force = true
             unitWithShield = nil
         end
         
-        if not unitWithShield and TimerMore("Shield", 2) and DoSpell("Щит земли", threatLowHPUnit) then 
-            TimerStart("Shield")
+        if not unitWithShield and (force or IsSpellNotUsed("Щит земли", 2)) and DoSpell("Щит земли", threatLowHPUnit) then 
             return 
         end
         
-        if unitWithShield and not IsOneUnit(unitWithShield, threatLowHPUnit) and threatLowHP < 65 and TimerMore("Shield", 4) and DoSpell("Щит земли", threatLowHPUnit) then 
-            TimerStart("Shield")
+        if unitWithShield and (force or IsSpellNotUsed("Щит земли", 5)) and not IsOneUnit(unitWithShield, threatLowHPUnit) and threatLowHP < 65 and DoSpell("Щит земли", threatLowHPUnit) then 
             return
         end
     end
