@@ -55,25 +55,41 @@ SetCommand("fear",
   end
 )
 ------------------------------------------------------------------------------------------------------------------
+
  SetCommand("unroot", 
   function()
-    if IsReadySpell("Издевательское знамя") and InRange("Охрана", target) and DoSpell("Издевательское знамя", target) then
-        echo("Портал установлен", 1)
+
+    if IsReadySpell("Издевательское знамя") then
+        DoSpell("Издевательское знамя", "target")
+        return
     end
 
-    if omacro("/target Издевательское знамя") then
-        echo("Портал выбран", 1)
+    local name = UnitName("target")
+    if name == nil or not sContains(name, "знамя") then
+        omacro("/target Издевательское знамя")
+        return
     end
+ 
+    if IsReadySpell("Охрана") then
+        DoSpell("Охрана", "target")
+        return
+    else
+        oexecute('TargetLastTarget()') 
+        TimerStart('UnRootSucces')   
+    end
+
   end, 
   function() 
-    if target == nil then target = "target" end
-    if not IsReadySpell("Охрана") then 
-        if UnitExists("target") and sContains(UnitName("target"), "знамя") then
-            echo("Телепортация прошла успешно", 1)
-            oexecute('TargetLastTarget()')
+    if TimerLess('UnRootSucces', 1) then return true end
+
+    if TimerMore('UnRoot', 3) then
+        if IsReadySpell("Охрана") and InRange("Охрана", "target") and IsReadySpell("Издевательское знамя") then
+            TimerStart('UnRoot')
+            return false
         end
-        return true 
+        return true
     end
+    
     return false 
   end
 )

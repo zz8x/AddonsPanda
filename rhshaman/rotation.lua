@@ -139,8 +139,8 @@ function HealRotation()
     local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000)
 
     if InCombatLockdown() then
-        if l > GreatHealingWaveHeal and UseEquippedItem("Талисман стрел разума") then return end
-        if l > GreatHealingWaveHeal and UseEquippedItem("Знак отличия Властелина Земли") then return end
+        --if l > GreatHealingWaveHeal and UseEquippedItem("Талисман стрел разума") then return end
+        --if l > GreatHealingWaveHeal and UseEquippedItem("Знак отличия Властелина Земли") then return end
         if h < 35 and HasSpell("Стремительность предков") and DoSpell("Стремительность предков") then chat("Мгновенка!") return end
     end
 
@@ -152,13 +152,13 @@ function HealRotation()
 
             if not HasMyDebuff("Огненный шок", 1,"target") and  DoSpell("Огненный шок") then return end
 
-            if PlayerInPlace() and HasMyDebuff("Огненный шок", 1.5,"target") and  DoSpell("Выброс лавы") then return end
+            if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target") and  DoSpell("Выброс лавы") then return end
 
-            if IsAOE() and PlayerInPlace() then
+            --[[if IsAOE() and PlayerInPlace() then
                 if DoSpell("Цепная молния") then return end
             else
                 if DoSpell("Молния") then return end    
-            end 
+            end]] 
         end
     end
 
