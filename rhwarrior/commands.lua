@@ -126,9 +126,7 @@ end
 )
 
 function UnRootCommand()
-    local flag = IsReadySpell("Издевательское знамя")  and  "Издевательское знамя" 
-                or (IsReadySpell("Деморализующее знамя") and  "Деморализующее знамя" or nil)
-
+    local flag = IsReadySpell("Издевательское знамя")  and  "Издевательское знамя" or "Деморализующее знамя"
     local target = "target"
     if IsAlt() then 
         target = "focus" 
