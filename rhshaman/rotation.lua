@@ -274,7 +274,7 @@ function Rotation()
         --if UseEquippedItem("Знак отличия Властелина Земли") then return end
         if DoSpell("Покорение стихий") then return end
         if DoSpell("Удар духов стихии") then return end
-        if DoSpell("Высвободить чары стихий") then return end
+        if DoSpell("Высвободить чары стихий", "target") then return end
     end
 
     --[[if IsReadySpell("Опаляющий тотем") then

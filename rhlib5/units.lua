@@ -266,13 +266,33 @@ function IsValidTarget(target)
 end
 
 ------------------------------------------------------------------------------------------------------------------
+IsInteractUnitInfo = ""
 function IsInteractUnit(t)
-    if not UnitExists(t) then return false end
-    if IsIgnored(t) then return false end
-    if IsValidTarget(t) then return false end
-    if UnitIsDeadOrGhost(t) then return false end
-    if UnitIsCharmed(t) then return false end
-    return not UnitIsEnemy("player",t)
+    if not UnitExists(t) then 
+    	IsInteractUnitInfo = "Нет юнита " .. t
+    	return false 
+    end
+    if IsIgnored(t) then 
+    	IsInteractUnitInfo = "В игноре " .. t
+    	return false 
+    end
+    if IsValidTarget(t) then 
+    	IsInteractUnitInfo = "Валидная цель " .. t
+    	return false 
+    end
+    if UnitIsDeadOrGhost(t) then 
+    	IsInteractUnitInfo = "Труп или призрак " .. t
+    	return false 
+    end
+    if UnitIsCharmed(t) then 
+    	IsInteractUnitInfo = "Околдован " .. t
+    	return false 
+    end
+    if UnitIsEnemy("player",t) then
+    	IsInteractUnitInfo = "Враждебен "  .. t
+    	return false 
+    end
+    return true
 end
 
 ------------------------------------------------------------------------------------------------------------------
