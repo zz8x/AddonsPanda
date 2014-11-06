@@ -49,26 +49,48 @@ SetCommand("fear",
     DoSpell("Охрана", target)
   end, 
   function(target) 
-    --if target == nil then target = "target" end
-    if not IsReadySpell("Охрана") then return true end
+    if not IsReadySpell("Охрана")  then 
+        chat("!ready def")
+        return true 
+    end
+    if not InRange("Охрана", target) then 
+        chat("!range def")
+        return true 
+    end
     return false 
   end
 )
+
+function DefCommand()
+    local target = "target"
+    if not IsInteractUnit(target) then
+        target = GetTeammate()
+        if not target then 
+            chat('!teammate def')
+            return 
+        end
+        if not IsInteractUnit(target) then
+            chat('!interact def')
+            return
+        end
+    end
+    DoCommand("def", target)
+end 
 ------------------------------------------------------------------------------------------------------------------
 
  SetCommand("unroot", 
-  function()
+  function(flag, target)
 
-    if IsReadySpell("Издевательское знамя") then
-        chat("UnRoot Издевательское знамя!")
-        DoSpell("Издевательское знамя", "target")
+    if IsReadySpell(flag) then
+        chat("UnRoot "..flag.."!")
+        DoSpell(flag, target)
         return
     end
 
     local name = UnitName("target")
-    if name ~= "Издевательское знамя" then
+    if name ~= flag then
         chat("UnRoot выбор знамени!")
-        omacro("/target Издевательское знамя")
+        omacro("/target "..flag)
         return
     end
  
@@ -83,16 +105,16 @@ SetCommand("fear",
     end
 
   end, 
-  function() 
+  function(flag, target) 
     if TimerLess('UnRootSucces', 1) then 
         chat("UnRootSucces!")
         return true 
     end
 
     if TimerMore('UnRoot', 3) then
-        if IsReadySpell("Охрана") and InRange("Охрана", "target") and IsReadySpell("Издевательское знамя") then
+        if IsReadySpell("Охрана") and InRange("Охрана", target) and IsReadySpell(flag) then
             TimerStart('UnRoot')
-            chat("UnRootStart!")
+            chat("UnRootStart "..target.."!")
             return false
         end
         chat("UnRootFail!")
@@ -102,3 +124,14 @@ SetCommand("fear",
     return false 
   end
 )
+
+function UnRootCommand()
+    local flag = IsReadySpell("Издевательское знамя")  and  "Издевательское знамя" 
+                or (IsReadySpell("Деморализующее знамя") and  "Деморализующее знамя" or nil)
+
+    local target = "target"
+    if IsAlt() then 
+        target = "focus" 
+    end
+    DoCommand("unroot", flag, target)
+end

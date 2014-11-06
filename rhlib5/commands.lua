@@ -105,10 +105,13 @@ function HelpCommand(cmd, param)
     local target = "player"
     if IsAlt() then 
         target = GetTeammate() 
-        if not target then return end
+        if not target then 
+            chat('!teammate')
+            return 
+        end
     end
     if not CanHeal(target) then chat('!help ' .. target) return end
-    if nil ~= param then
+    if nil ~= param then 
         DoCommand(cmd, param, target)
     else
         DoCommand(cmd, target)
