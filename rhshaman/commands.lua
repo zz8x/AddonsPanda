@@ -29,21 +29,12 @@ SetCommand("mount",
             return true
         end]]
 
-        if HasBuff("Призрачный волк") then
-            if InCombatLockdown() or not PlayerInPlace() then
-                oexecute('CancelUnitBuff("player", "Призрачный волк")')
-                DoSpell("Призрачный волк") 
-                TimerStart('Mount')
-                return true
-            end
-        end
-
         if IsMounted() or CanExitVehicle()  then
             TimerStart('Mount')
             return true
         end
 
-        if InCombatLockdown() or IsArena() or not PlayerInPlace() or not IsOutdoors() or IsSwimming() then
+        if not HasBuff("Призрачный волк") and InCombatLockdown() or IsArena() or not PlayerInPlace() or not IsOutdoors() or IsSwimming() then
             DoSpell("Призрачный волк") 
             TimerStart('Mount')
             return true

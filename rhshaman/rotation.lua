@@ -5,13 +5,12 @@ local function actualDistance(target)
     return InRange("Молния", target)
 end 
 local peaceBuff = {"Пища", "Питье", "Призрачный волк"}
-local teammate = nil
 function Idle()
-
-    if InControl("player", 5) and IsReadySpell("Тотем трепета") then
+    if TimerLess('Control', 2) and InControl("player", 5) and IsReadySpell("Тотем трепета") then
         if HasTotem(2) ~= "Тотем трепета" and DoSpell("Тотем трепета") then return end
         return
     end
+    if InCombatLockdown() and not IsReadySpell("Тотем трепета") and DoSpell("Зов Стихий") then return end
     if AutoFreedom() then return end
     if IsAttack() or IsMouse(3) then
         if HasBuff("Парашют") then oexecute('CancelUnitBuff("player", "Парашют")') return end
@@ -20,19 +19,8 @@ function Idle()
         if IsMounted() then Dismount() return end 
     end
 
-
-
     -- дайте поесть (побегать) спокойно 
     if not IsAttack() and (IsMounted() or CanExitVehicle() or HasBuff(peaceBuff)) then return end
-    
-    --[[if IsFarm() then
-        if PlayerInPlace() and not InCombatLockdown() and UnitMana100("player") < 60 and UseItem("Дамайча") then return end
-        InCombatMode()
-    end]]
-
-    if not FastUpdate then
-        teammate = GetTeammate()
-    end
 
     if not FastUpdate and IsReadySpell("Пронизывающий ветер") then
         for i = 1, #TARGETS do
@@ -56,8 +44,16 @@ function Idle()
         return
     end
 end
-
+local function CheckCast()
+    local spell = UnitCastingInfo("player")
+    if not spell then return end
+    local target = GetLastSpellTarget(spell)
+    if not target then return end
+    if not InRange(spell, target) then oexecute("SpellStopCasting()") end
+end
+local dispelTypesHeal = {"Curse", "Magic"}
 function HealRotation()
+    CheckCast()
     local members = GetHealingMembers(UNITS)
     if #members < 1 then return false end
     local u = members[1]
@@ -65,36 +61,38 @@ function HealRotation()
     local l = UnitLostHP(u)
 
     if HasBuff("Стремительность предков") then
-        if DoSpell("Великая волна исцеления", u) then return end
+        DoSpell("Великая волна исцеления", u)
         return 
     end
 
     if TryInterrupt(TARGETS, h > 40) then return end
 
+    local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
     if InCombatLockdown() then
-        if h < 70 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
+        if PlayerInPlace() and not HasTotem(3) then
+            if myMana < 50 and IsReadySpell("Тотем прилива маны") then
+                 DoSpell("Тотем прилива маны") 
+                 return
+            end
+            if h < 40 and IsReadySpell("Тотем целительного прилива") then
+                DoSpell("Тотем целительного прилива")
+                return
+            end
+            if h < 70 and IsReadySpell("Тотем исцеляющего потока") then
+                DoSpell("Тотем исцеляющего потока")
+                return
+            end
+        end
         if h < 60 and DoSpell("Благосклонность предков") then return true end
         if h < 60 and DoSpell("Перерождение") then return true end
-        local hp  = UnitHealth100("payer")
-        if hp < 50 and DoSpell("Каменная форма") then return true end
-        if h < 40 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
-    end
-
-
-    if h > 30 and IsReadySpell("Очищение духа") and UnitMana100("player") > 10  then
-        for i = 1, #members do
-            local u = members[i]
-            if (IsAlt() or InControl(u)) and TryDispel(u) then return end
-        end
+        if myHP < 50 and DoSpell("Каменная форма") then return true end
     end
 
     if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
 
     if GetInventoryItemID("player", 16) and not sContains(GetTemporaryEnchant(16), "Жизнь Земли") and DoSpell("Оружие жизни земли") then return end
 
-    local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
-    local unitWithShield, threatLowHPUnit, threatLowHP, notfullhpmembers = nil, nil, 1000, 0
-
+    local unitWithShield, threatLowHPUnit, threatLowHP = nil, nil, 1000
     for i=1,#members do 
         local u = members[i]
         local h = UnitHealth100(u)
@@ -103,7 +101,6 @@ function HealRotation()
            threatLowHPUnit = u  
            threatLowHP = h 
         end
-        if h < 90 then notfullhpmembers = notfullhpmembers + 1 end
     end
 
     if myHP < 40 then
@@ -127,57 +124,65 @@ function HealRotation()
         end
     end
 
-    if HasSpell("Быстрина") and IsReadySpell("Быстрина") then
-        for i=1,#members do
+    if h < 99 and DoSpell("Быстрина", u) then return end
+    if h < 99 and DoSpell("Высвободить чары стихий", u) then return end
+
+    local GreatHealingWaveHeal = GetSpellAmount("Великая волна исцеления", 12000) * 1.2
+    local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000) * 1.2
+
+    if (h < 20 or (l > GreatHealingWaveHeal * 1.5)) and HasSpell("Стремительность предков") and DoSpell("Стремительность предков") then chat("Мгновенка!") return end
+
+    if IsReadySpell("Очищение духа") then
+        for i = 1, #members do
             local u = members[i]
-            if UnitHealth100(u) < (HasMyBuff("Быстрина", 1 , u) and 50 or 100) and DoSpell("Быстрина", u) then return end
+            local aura = InControl(u, 2)
+            if aura then
+                local debuffType = select(5, HasDebuff(aura)) 
+                if tContains(dispelTypesHeal, debuffType) then 
+                    chat('Диспелим контроль '..aura..' с ' .. u)
+                    TryDispel(u)
+                    return 
+                end
+            end
         end
-    end
-
-    if h < 100 and DoSpell("Высвободить чары стихий", u) then return end
-
-    local GreatHealingWaveHeal = GetSpellAmount("Великая волна исцеления", 12000)
-    local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000)
-
-    if InCombatLockdown() then
-        --if l > GreatHealingWaveHeal and UseEquippedItem("Талисман стрел разума") then return end
-        --if l > GreatHealingWaveHeal and UseEquippedItem("Знак отличия Властелина Земли") then return end
-        if h < 35 and HasSpell("Стремительность предков") and DoSpell("Стремительность предков") then chat("Мгновенка!") return end
     end
 
     if IsAttack() and h > 60 then
         if not IsInteractUnit("target") then CheckTarget() end
-
-        if not  IsNotAttack("target") and CanAttack("target") then 
-            if IsSpellNotUsed("Развеивание магии", 2) and TrySteal("target") then return end
-
+        if not IsNotAttack("target") and CanAttack("target") then 
             if not HasMyDebuff("Огненный шок", 1,"target") and  DoSpell("Огненный шок") then return end
-
-            if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target") and  DoSpell("Выброс лавы") then return end
-
+            if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target") and DoSpell("Выброс лавы") then return end
         end
+        if IsSpellNotUsed("Развеивание магии", 2) and TrySteal("target") then return end
     end
 
     if PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
                         
-        if h < 38 and DoSpell("Исцеляющий всплеск", u) then return end
-
-        if notfullhpmembers > 2 and DoSpell("Цепное исцеление", u) then return end
-
-        if (l > GreatHealingWaveHeal) then
-            if HasMyBuff("Приливные волны", 1.5, "player") and DoSpell("Великая волна исцеления", u) then return end
-        else
-            if (l > HealingWaveHeal) and DoSpell("Волна исцеления", u) then return end 
+        if h < 20 and HasMyBuff("Приливные волны", 1.5, "player") then
+            DoSpell("Исцеляющий всплеск", u)
+            return 
         end
-        
-        if h < 100 and IsCtr() then
-            if notfullhpmembers > 1 then
-                if DoSpell("Цепное исцеление", u) then return end 
-            else
-                if DoSpell("Волна исцеления", u) then return end
+
+        if h < 90 and myMana > 40 and HasBuff("Быстрина", 2.5, u) then
+            for i = 1, #members do
+                local u2 = members[i]
+                if UnitHealth100(u2) < 90 and InDistance(u, u2, 12) then
+                    DoSpell("Цепное исцеление", u)
+                    return
+                end
             end
         end
-        
+
+        if myMana > 40 and (l > GreatHealingWaveHeal) and HasMyBuff("Приливные волны", 2.5, "player") then
+            DoSpell("Великая волна исцеления", u)
+            return
+        end 
+
+        if (h < 50 or (l > HealingWaveHeal)) and HasMyBuff("Приливные волны", 1.5, "player") then
+            DoSpell("Волна исцеления", u)
+            return
+        end 
+  
     end
 
     if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
@@ -196,34 +201,30 @@ function HealRotation()
 end
 
 function TryHeal()
-    local hp = UnitHealth100("player")
+
     if InCombatLockdown() and IsValidTarget("target") then
-        if hp < 70 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
-        if hp < 60 and DoSpell("Наставления предков") then return true end
+        local hp = UnitHealth100("player")
         if hp < 50 and DoSpell("Каменная форма") then return true end
-        if hp < 40 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
-    end
-    if  PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
         if not (IsArena() or InDuel()) then
             if hp < 35 then UseHealPotion() end
         end
-        if teammate then
-            local t = UnitHealth100(teammate)
-            if t < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-            if CanHeal(teammate) and t < (IsCtr() and 99 or 25) and  DoSpell("Исцеляющий всплеск", teammate) then return true end
-            if t < 20 then return true end
-        end
-        
-        if hp < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-        if hp < (IsCtr() and 99 or 25) then DoSpell("Исцеляющий всплеск", "player")  return true end
-        if hp < 20 then return true end 
-        
-        
+    end
+
+    local members = GetHealingMembers(IUNITS)
+    if #members < 1 then return false end
+    local u = members[1]
+    local h = UnitHealth100(u)
+    local l = UnitLostHP(u)
+    if h < 70 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
+    if h < 60 and DoSpell("Наставления предков") then return true end
+    if h < 40 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
+    if  PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
+        if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
+        if h < (IsCtr() and 99 or 25) then DoSpell("Исцеляющий всплеск", u)  return true end
+        if h < 20 then return true end 
+        TryDispel(u)
     end
     if IsSpellInUse("Исцеляющий всплеск") then return true end
-    if IsSpellNotUsed("Очищение духа", 2) and TryDispel("player") then return true end
-    if teammate and TryDispel(teammate) then return true end
-
     return false
 end
 
@@ -248,12 +249,10 @@ function Rotation()
 
     if IsSpellNotUsed("Развеивание магии", 2) and TrySteal("target") then return end
 
-    --[[if IsShift() and IsReadySpell("Землетрясение") then
+    if IsShift() and IsReadySpell("Землетрясение") then
         DoSpell("Землетрясение", "target")
         return
-    end]]
-
-    
+    end
 
     if HasMyDebuff("Огненный шок", 5,"target") and (select(4, HasBuff("Щит молний")) or 0) > 6 and DoSpell("Земной шок") then return end
     
@@ -273,11 +272,6 @@ function Rotation()
         if DoSpell("Удар духов стихии") then return end
         if DoSpell("Высвободить чары стихий", "target") then return end
     end
-
-    --[[if IsReadySpell("Опаляющий тотем") then
-            if HasTotem(1) ~= "Тотем магмы" and DoSpell("Опаляющий тотем") then return end
-            return
-    end]]
 
     if UnitMana100("player") > 30 and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target")  then
         if DoSpell("Выброс лавы") then return end

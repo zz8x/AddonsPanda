@@ -299,30 +299,30 @@ local function UpdateTargetPosition(event, ...)
 end
 AttachEvent('COMBAT_LOG_EVENT_UNFILTERED', UpdateTargetPosition)
 ------------------------------------------------------------------------------------------------------------------
-local spellsAmounts = {};
-local spellsAmount = {};
+SpellsAmounts  = SpellsAmounts or {};
+SpellsAmount = SpellsAmount or {};
 local function UpdateSpellsAmounts(event, ...)
     local timestamp, type, hideCaster,                                                                      
       sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags,   
       spellId, spellName, spellSchool,                                                                     
       amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing = ...
     if amount and sourceGUID == UnitGUID("player") and sContains(type, "SPELL_HEAL") and spellId and spellName  then
-        local amounts = spellsAmounts[spellName]
+        local amounts = SpellsAmounts[spellName]
         if nil == amounts then amounts = {} end
         tinsert(amounts, amount)
-        if #amounts > 5 then tremove(amounts, 1) end
-        spellsAmounts[spellName] = amounts
+        if #amounts > 25 then tremove(amounts, 1) end
+        SpellsAmounts[spellName] = amounts
         local average = 0
         for i = 1, #amounts do
             average = average + amounts[i]
         end
-        spellsAmount[spellName] = floor(average / #amounts)
+        SpellsAmount[spellName] = floor(average / #amounts)
     end
 end
 AttachEvent('COMBAT_LOG_EVENT_UNFILTERED', UpdateSpellsAmounts)
 
 function GetSpellAmount(spellName, expected)
-    local amount = spellsAmount[spellName]
+    local amount = SpellsAmount[spellName]
     return nil == amount and expected or amount
 end
 

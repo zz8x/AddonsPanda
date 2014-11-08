@@ -86,33 +86,38 @@ end
 local dispelSpell = "Очищение духа"
 local dispelTypes = {"Curse"}
 local dispelTypesHeal = {"Curse", "Magic"}
-local function dispelTarget(unit)
-    if not CanHeal(unit) or HasDebuff("Нестабильное колдовство", 0.1, unit) then return false end
+local function getDispelDebuffCount(unit)
     local supportedTypes = HasSpell("Быстрина") and dispelTypesHeal or dispelTypes
-    for i = 1, 40 do
-        local name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitDebuff(unit, i,true) 
-        if name and isStealable and (expirationTime - GetTime() >= 3 or expirationTime == 0) and tContains(supportedTypes, debuffType) then
-            if DoSpell(dispelSpell, unit) then
-                print(dispelSpell, name, debuffType, unit)
-                return true
+    local count = 0
+    if CanHeal(unit) and not HasDebuff("Нестабильное колдовство", 0.1, unit) then 
+        for i = 1, 40 do
+            local name, _, _, _, debuffType, _, expirationTime  = UnitDebuff(unit, i, true) 
+            if name and (expirationTime - GetTime() >= 3 or expirationTime == 0) and tContains(supportedTypes, debuffType) then
+                count = count + 1
             end
-            return false
         end
     end
-    return false
+    return count
 end
 
 function TryDispel(targets)
     if not CanInterrupt then return false end
     if not HasSpell(dispelSpell) or not IsReadySpell(dispelSpell) then return false end
+    local unit = nil
     if type(targets) == 'table' then
+        local count = 0       
         for i=1, #targets do
-            if dispelTarget(targets[i]) then return true end
+            local u = targets[i]
+            local c = getDispelDebuffCount(u)
+            if c > count then
+                unit = u
+                count = c
+            end
         end
-        return false
     else
-        return dispelTarget(targets)
+        if getDispelDebuffCount(targets) > 0 then unit = targets end
     end
+    return unit and DoSpell(dispelSpell, unit)
 end
 ------------------------------------------------------------------------------------------------------------------
 local stealSpell = "Развеивание магии"
@@ -123,7 +128,6 @@ local function stealTarget(unit)
         name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitBuff(unit, i,true) 
         if name and isStealable and (expirationTime - GetTime() >= 3 or expirationTime == 0) and tContains(stealTypes, debuffType) then
             if DoSpell(stealSpell, unit) then
-                print(stealSpell, name, debuffType, unit)
                 return true
             end
             return false

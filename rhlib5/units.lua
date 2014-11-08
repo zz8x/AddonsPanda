@@ -437,18 +437,18 @@ function PlayerInPlace()
 end
 
 ------------------------------------------------------------------------------------------------------------------
+local sqrt = sqrt
 function CheckDistance(unit1,unit2)
-  if IsOneUnit(unit1,unit2) then return 0 end
-  local x1,y1,z1,rot1 = oinfo(unit) 
+  if not UnitExists(unit1) or not UnitExists(unit2) or IsOneUnit(unit1,unit2) then return 0 end
+  local x1,y1,z1,rot1 = oinfo(unit1) 
   local x2,y2,z2,rot2 = oinfo(unit2) 
-  if x1 == 0 or y1 == 0 or x2 == 0 or y2 == 0 then return nil end
   return sqrt( (x1-x2)^2 + (y1-y2)^2 + (z1-z2)^2 )
 end
 
 ------------------------------------------------------------------------------------------------------------------
 function InDistance(unit1,unit2, distance)
   local d = CheckDistance(unit1, unit2)
-  return not d or d < distance
+  return d and d ~= 0 and d < distance
 end
 
 ------------------------------------------------------------------------------------------------------------------
