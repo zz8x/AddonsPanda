@@ -27,7 +27,7 @@ end
 
 function TryProtect()
     local hp = UnitHealth100("player")
-    if hp < 60 and DoSpell("Оборонительная стойка") then return end
+    if IsPvP() and hp < 60 and DoSpell("Оборонительная стойка") then return end
     if hp < 50 and DoSpell("Бой насмерть") then return end
     if hp < 30 and DoSpell("Глухая оборона") then return end
     if HasBuff("Глухая оборона") and DoSpell("Ободряющий клич") then return end
@@ -47,8 +47,9 @@ function Rotation()
     if TryInterrupt(TARGETS) then return end
  
     if IsNotAttack("target") then return end
-    if UnitHealth100("player") > 60 and DoSpell("Боевая стойка") then return end
+    if IsPvP() and UnitHealth100("player") > 60 and DoSpell("Боевая стойка") then return end
     if InRange("Рывок") and DoSpell("Рывок") then return end
+    if IsShift() and DoSpell("Удар грома") then return end
     if IsCtr() then
         if DoSpell("Безрассудство") then return end
         if HasSpell("Вихрь клинков") and UnitMana100(player) > 30 and DoSpell("Размашистые удары") then return end
@@ -63,10 +64,9 @@ function Rotation()
     --if IsValidTarget() and UnitMana100(player) < 45 and DoSpell("Ярость берсерка") then return end
     if IsPvP() and not HasMyDebuff("Пронзительный вой", 1, target) and CheckInteractDistance("target", 2) and IsSpellNotUsed("Пронзительный вой", 3) and DoSpell("Пронзительный вой") then return end
     if InMelee(target) and DoSpell("Удар колосса") then return end
-    if InMelee(target) and UnitMana100(player) < 90 and DoSpell("Смертельный удар") then return end
+    if InMelee(target) and DoSpell("Смертельный удар") then return end
     if not IsPvP() and IsValidTarget() and DoSpell("Удар громовержца") then return end
 
-    if IsShift() and not HasMyDebuff("Слабые удары", 0.1, target) and DoSpell("Удар грома") then return end
     if IsShift() and UnitMana100(player) > 30 and DoSpell("Вихрь") then return end
 
     if InMelee(target) and UnitMana100(player) > 45 and DoSpell("Казнь") then return end
