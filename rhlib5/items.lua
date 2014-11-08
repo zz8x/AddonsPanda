@@ -1,10 +1,13 @@
 -- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
-function IsReadySlot(slot)
+local GetTime = GetTime
+------------------------------------------------------------------------------------------------------------------
+
+function IsReadySlot(slot, checkGCD)
     if not HasAction(slot) then return false end 
     local itemID = GetInventoryItemID("player",slot)
     if not itemID or (IsItemInRange(itemID, "target") == 0) then return false end
-    if not IsReadyItem(itemID) then return false end
+    if not IsReadyItem(itemID, checkGCD) then return false end
     return true
 end
 
@@ -13,11 +16,12 @@ end
 function UseSlot(slot)
     if IsPlayerCasting() then return false end
     if not IsReadySlot(slot) then return false end
+    if not IsReadySlot(slot, true) then return true end
     omacro("/use " .. slot) 
     if SpellIsTargeting() then 
         oclick("target")
     end
-    return not IsReadySlot(slot)
+    return true
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -50,12 +54,11 @@ function ItemInRange(item, unit)
 end
 
 ------------------------------------------------------------------------------------------------------------------
-function IsReadyItem(name)
+function IsReadyItem(name, checkGCD)
    local usable = IsUsableItem(name) 
    if not usable then return true end
    local left = GetItemCooldownLeft(name)
-   if left > LagTime then return false end
-   return true
+   return IsReady(left, checkGCD)
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -73,6 +76,7 @@ function UseItem(itemName, count)
     if IsPlayerCasting() then return false end
     if not IsEquippedItem(itemName) and not IsUsableItem(itemName) then return false end
     if not IsReadyItem(itemName) then return false end
+    if not IsReadyItem(itemName, true) then return true end
     if not count then count = 1 end
     for i = 1, count do
         omacro("/use " .. itemName)

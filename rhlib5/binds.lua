@@ -36,7 +36,7 @@ end
 ------------------------------------------------------------------------------------------------------------------
 function FaceToTarget(force)
     if not force and (IsMouselooking() or not PlayerInPlace()) then return end
-    if TimerMore("FaceToTarget", 0.2) and IsValidTarget("target") and not PlayerFacingTarget("target") then
+    if TimerMore("FaceToTarget", 0.2) and IsValidTarget("target") and (force or not PlayerFacingTarget("target")) then
         TimerStart("FaceToTarget")
         oface("target")
     end
@@ -148,12 +148,19 @@ local function compareTargets(t1,t2) return targetWeights[t1] < targetWeights[t2
 
 FastUpdate = false
 local looted = false
+local waterWalkingBuffs = {"Хождение по воде", "Льдистый путь"}
 function UpdateIdle(elapsed)
     
     if nil == oexecute then 
         echo("Требуется магичеcкое действие!!!", true) 
         return 
     end
+
+    if UpdateCommands() then return end
+    
+    if Paused or UnitIsDeadOrGhost("player") then return end
+
+    if IsBattleground() and UnitIsDead("player") and not UnitIsGhost("player") then oexecute("RepopMe()") end
 
     if IsFarm() then
         if CanAttack("target") then looted = false end
@@ -171,21 +178,18 @@ function UpdateIdle(elapsed)
         end
 
         if LootFrame:IsVisible() then CloseLoot()  end
+    else
+        if not IsAttack() and LootFrame:IsVisible() then return end
     end
 
     if IsMouse(3) and IsValidTarget("mouseover") and not IsOneUnit("target", "mouseover") then 
         oexecute('FocusUnit("mouseover")')
     end
 
-    if not IsAttack() and LootFrame:IsVisible() then return end
-
-    if UpdateCommands() then return end
-    
-    if Paused then return end
-
-    if IsBattleground() and UnitIsDead("player") and not UnitIsGhost("player") then oexecute("RepopMe()") end
-
-    if UnitIsDeadOrGhost("player") or UnitIsCharmed("player") or not UnitPlayerControlled("player") then return end
+    if GetFalingTime() > 1 then
+        local buff =  HasBuff(waterWalkingBuffs)
+        if buff then oexecute('CancelUnitBuff("player", "'..buff..'")') end
+    end
 
     if not FastUpdate then    
         if IsPlayerCasting() then 
@@ -237,6 +241,15 @@ local function UpdateMacroAlertHider()
 end
 AttachUpdate(UpdateMacroAlertHider)
 ------------------------------------------------------------------------------------------------------------------
+function GetFalingTime()
+    if IsFalling() then
+        if not TimerStarted("Falling") then TimerStart("Falling") end
+    else
+        if TimerStarted("Falling") then TimerReset("Falling") end
+    end
+    return TimerStarted("Falling") and TimerElapsed("Falling") or 0
+end
+------------------------------------------------------------------------------------------------------------------
 -- Запоминаем вредоносные спелы которые нужно кастить (нужно для сбивания кастов, например тотемом заземления)
 if HarmfulCastingSpell == nil then HarmfulCastingSpell = {} end
 function IsHarmfulCast(spellName)
@@ -255,3 +268,15 @@ local function UpdateHarmfulSpell(event, ...)
 end
 AttachEvent('COMBAT_LOG_EVENT_UNFILTERED', UpdateHarmfulSpell)
 -------------------------------------------------------------------------------------------------------------
+function UpdateAutoFreedom(event, ...)
+    local timestamp, type, hideCaster,                                                                      
+      sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags,   
+      spellId, spellName, spellSchool,                                                                     
+      amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing = ...
+    if sourceGUID == UnitGUID("player") and amount and sContains(amount, "Действие невозможно")  then
+        chat(amount)
+        TimerStart('Control')
+    end
+end
+AttachEvent("COMBAT_LOG_EVENT_UNFILTERED", UpdateAutoFreedom)
+------------------------------------------------------------------------------------------------------------------

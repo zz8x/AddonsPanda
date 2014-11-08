@@ -24,24 +24,33 @@ SetCommand("mount",
 
         if InGCD() or IsPlayerCasting() then return end
 
-        if (IsLeftControlKeyDown() or IsSwimming()) and not HasBuff("Хождение по воде", 1, "player") and DoSpell("Хождение по воде", "player") then 
+        --[[if IsSwimming() and not HasBuff("Хождение по воде", 1, "player") and DoSpell("Хождение по воде", "player") then 
+            TimerStart('Mount')
+            return true
+        end]]
+
+        if HasBuff("Призрачный волк") then
+            if InCombatLockdown() or not PlayerInPlace() then
+                oexecute('CancelUnitBuff("player", "Призрачный волк")')
+                DoSpell("Призрачный волк") 
+                TimerStart('Mount')
+                return true
+            end
+        end
+
+        if IsMounted() or CanExitVehicle()  then
             TimerStart('Mount')
             return true
         end
 
-        if HasBuff("Призрачный волк") or IsMounted() or CanExitVehicle()  then
-            TimerStart('Mount')
-            return true
-        end
-
-        if InCombatLockdown() or IsArena() or not PlayerInPlace() or not IsOutdoors() then
+        if InCombatLockdown() or IsArena() or not PlayerInPlace() or not IsOutdoors() or IsSwimming() then
             DoSpell("Призрачный волк") 
             TimerStart('Mount')
             return true
         end
 
         --local mount = (IsShift() or IsBattleground() or IsArena()) and "Стремительный гнедой рысак" or "Вороной грифон"--"Камнешкурый дракон"--"Ветролет" 
-        local mount = "Золотистый грифон"
+        local mount = "Непобедимый"--"Золотистый грифон"
         --if IsAlt() then mount = "Тундровый мамонт путешественника" end
         if UseMount(mount) then 
             TimerStart('Mount')

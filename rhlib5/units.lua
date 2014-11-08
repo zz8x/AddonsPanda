@@ -592,13 +592,27 @@ function CheckTarget(useFocus , actualDistance)
     end
 end
 ------------------------------------------------------------------------------------------------------------------
+local freedomSlots = {13, 14}
 local freedomItem = nil
 local freedomSpell = "Каждый за себя"
 function IsReadyFreedom()
-    if freedomItem == nil then
-       freedomItem = (UnitFactionGroup("player") == "Horde" and "Медальон Орды" or "Искусно изготовленный медальон упорства злонравного гладиатора")
-    end
-    return HasSpell(freedomSpell) and IsReadySpell(freedomSpell) or IsReadyItem(freedomItem) 
+	if HasSpell(freedomSpell) then
+		return IsReadySpell(freedomSpell) 
+	else
+		if freedomItem == nil then
+	    	for i=1,#freedomSlots do
+	    		local slot = freedomSlots[i]
+	    		local itemID = GetInventoryItemID("player",slot)
+	    		if itemID and GetItemSpell(itemID) == "PvP-аксессуар" then
+					freedomItem = GetItemInfo(itemID)
+					return IsReadyItem(freedomItem) 
+	    		end
+	    	end
+	    else
+	    	return IsReadyItem(freedomItem) 
+	    end
+	end
+    return false
 end
 
 function TryFreedom() 
@@ -607,14 +621,12 @@ function TryFreedom()
 end
 
 function AutoFreedom()
-    -- не слишком часто
-    if TimerLess("AutoFreedom", 0.2) or not IsReadyFreedom() then return false end
-    TimerStart("AutoFreedom")
+    if not IsReadyFreedom() then return false end
+    if not TimerStarted('Control') or TimerMore('Control', 2) then return false end
     -- контроли или сапы (по атаке)
-    debuff = InStun("player", 2) or (IsCtr() and InSap("player", 2))
-    -- больше 3 сек
-    if debuff and (IsCtr() or (select(5,HasDebuff(debuff, "player")) or 0) > 3) then
-        Notify('freedom: ' .. debuff)
+    debuff = InStun("player", 2) or (IsAttack() and InSap("player", 2))
+    -- больше 2 сек
+    if debuff then
         if TryFreedom() then
             chat('freedom: ' .. debuff)
             return true

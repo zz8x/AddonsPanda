@@ -1,5 +1,7 @@
 ﻿-- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
+local GetTime = GetTime
+------------------------------------------------------------------------------------------------------------------
 -- Время сетевой задержки 
 LagTime = 0
 local lastUpdate = 0
@@ -116,12 +118,23 @@ end
 function InGCD()
     return GetGCDLeft() > LagTime
 end
+
+local abs = math.abs
+function IsReady(left, checkGCD)
+    if checkGCD == nil then checkGCD = false end
+    if not checkGCD then
+        local gcdLeft = GetGCDLeft()
+        if (abs(left - gcdLeft) < 0.01) then return true end    
+    end
+    if left > LagTime then return false end
+    return true
+end
 ------------------------------------------------------------------------------------------------------------------
 function InInteractRange(unit)
     -- need test and review
     if (unit == nil) then unit = "target" end
     if not IsInteractUnit(unit) then return false end
-    return  IsItemInRange(34471, unit) == 1
+    return IsItemInRange(34471, unit) == 1
 end
 ------------------------------------------------------------------------------------------------------------------
 function InMelee(target)
@@ -130,16 +143,12 @@ function InMelee(target)
 end
 
 ------------------------------------------------------------------------------------------------------------------
-local abs = math.abs
+
 function IsReadySpell(name, checkGCD)
-    if checkGCD == nil then checkGCD = false end
     local usable, nomana = IsUsableSpell(name)
     if not usable then return false end
-    local gcdLeft = GetGCDLeft()
     local left = GetSpellCooldownLeft(name)
-    if not checkGCD and (abs(left - gcdLeft) < 0.01) then return true end    
-    if left > LagTime then return false end
-    return IsSpellNotUsed(name, 0.5)
+    return IsSpellNotUsed(name, 0.5) and IsReady(left, checkGCD)
 end
 
 ------------------------------------------------------------------------------------------------------------------

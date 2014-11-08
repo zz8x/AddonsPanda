@@ -1,5 +1,6 @@
 -- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
+local GetTime = GetTime
 -- Универсальный внутренний метод, для работы с бафами и дебафами
 -- HasAura('auraName' or {'aura1', ...}, minExpiresTime(s), 'target' or {'target', 'focus', ...}, UnitDebuff or UnitBuff or UnitAura, bool AuraCaster = player)
 local function HasAura(aura, last, target, method, my)

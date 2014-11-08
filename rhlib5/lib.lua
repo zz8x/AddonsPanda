@@ -36,7 +36,7 @@ frame:SetScript("OnEvent", onEvent)
 local UpdateList = {}
 function AttachUpdate(f, i) 
     if nil == f then error("Func can't be nil") end  
-    if i == nil then i = 1 end -- одна секунда по умолчанию
+    if i == nil then i = 0.5 end
     tinsert(UpdateList, {func = f, interval = i, update = 0})
 end
 
@@ -55,7 +55,7 @@ local function OnUpdate(frame, elapsed)
     update = update + elapsed
     if update > throttle then
         unpdateTick  = unpdateTick + 1
-        if (unpdateTick == 10) then
+        if (unpdateTick == 20) then
             FastUpdate = false
             unpdateTick = 0
         else
@@ -64,23 +64,22 @@ local function OnUpdate(frame, elapsed)
 
         UpdateIdle(update)
 
-        if not FastUpdate then
-            for i=1, #UpdateList do
-                local u = UpdateList[i]
-                u.update = u.update + update
-                if u.update > u.interval then
-                    u.func(u.update)
-                    u.update = 0
-                end
+        -- AttachUpdate
+        for i=1, #UpdateList do
+            local u = UpdateList[i]
+            u.update = u.update + update
+            if u.update > u.interval then
+                u.func(u.update)
+                u.update = 0
             end
         end
+
         update = 0
     end
 end
 frame:SetScript("OnUpdate", OnUpdate)
 ------------------------------------------------------------------------------------------------------------------
 function omacro(macro)
-    if(IsRightControlKeyDown() == 1) then print('macro', macro) end
     oexecute("RunMacroText('"..macro.."')")
 end
 ------------------------------------------------------------------------------------------------------------------

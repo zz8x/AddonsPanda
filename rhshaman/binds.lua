@@ -6,6 +6,8 @@ BINDING_NAME_SRH_AUTOAOE = "Вкл/Выкл авто AOE"
 
 print("|cff0055ffRotation Helper|r|cffffe00a > |r|cff0000ffShaman|r loaded")
 ------------------------------------------------------------------------------------------------------------------
+local GetTime = GetTime
+------------------------------------------------------------------------------------------------------------------
 if CanInterrupt == nil then CanInterrupt = true end
 
 function UseInterrupt()
@@ -88,10 +90,10 @@ local function dispelTarget(unit)
     if not CanHeal(unit) or HasDebuff("Нестабильное колдовство", 0.1, unit) then return false end
     local supportedTypes = HasSpell("Быстрина") and dispelTypesHeal or dispelTypes
     for i = 1, 40 do
-        local name, _, _, _, debuffType, duration, expirationTime   = UnitDebuff(unit, i,true) 
-        if name and (expirationTime - GetTime() >= 3 or expirationTime == 0) and tContains(supportedTypes, debuffType) then
+        local name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitDebuff(unit, i,true) 
+        if name and isStealable and (expirationTime - GetTime() >= 3 or expirationTime == 0) and tContains(supportedTypes, debuffType) then
             if DoSpell(dispelSpell, unit) then
-                chat(dispelSpell, name, debuffType, unit)
+                print(dispelSpell, name, debuffType, unit)
                 return true
             end
             return false
@@ -118,10 +120,10 @@ local stealTypes = {"Magic"}
 local function stealTarget(unit)
     if not CanMagicAttack(unit) then return false end
     for i = 1, 40 do
-        lname, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId   = UnitBuff(unit, i,true) 
+        name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitBuff(unit, i,true) 
         if name and isStealable and (expirationTime - GetTime() >= 3 or expirationTime == 0) and tContains(stealTypes, debuffType) then
             if DoSpell(stealSpell, unit) then
-                chat(stealSpell, name, debuffType, unit)
+                print(stealSpell, name, debuffType, unit)
                 return true
             end
             return false

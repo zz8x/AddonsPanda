@@ -15,7 +15,7 @@ function Idle()
     if AutoFreedom() then return end
     if IsAttack() or IsMouse(3) then
         if HasBuff("Парашют") then oexecute('CancelUnitBuff("player", "Парашют")') return end
-        if HasBuff("Призрачный волк") then  oexecute('CancelUnitBuff("player", "Призрачный волк")') return end
+        if HasBuff("Призрачный волк") then oexecute('CancelUnitBuff("player", "Призрачный волк")') return end
         if CanExitVehicle() then VehicleExit() end
         if IsMounted() then Dismount() return end 
     end
@@ -57,7 +57,6 @@ function Idle()
     end
 end
 
-local attackCasts = {"Молния", "Цепная молния", "Выброс лавы"}
 function HealRotation()
     local members = GetHealingMembers(UNITS)
     if #members < 1 then return false end
@@ -65,17 +64,21 @@ function HealRotation()
     local h = UnitHealth100(u)
     local l = UnitLostHP(u)
 
-    if h < 40 then
-        local spell = UnitCastingInfo("player")
-        if spell and tContains(attackCasts, spell) then oexecute("SpellStopCasting()") end
-    end
-
     if HasBuff("Стремительность предков") then
         if DoSpell("Великая волна исцеления", u) then return end
         return 
     end
 
     if TryInterrupt(TARGETS, h > 40) then return end
+
+    if InCombatLockdown() then
+        if h < 70 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
+        if h < 60 and DoSpell("Благосклонность предков") then return true end
+        if h < 60 and DoSpell("Перерождение") then return true end
+        local hp  = UnitHealth100("payer")
+        if hp < 50 and DoSpell("Каменная форма") then return true end
+        if h < 40 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
+    end
 
 
     if h > 30 and IsReadySpell("Очищение духа") and UnitMana100("player") > 10  then
@@ -89,15 +92,13 @@ function HealRotation()
 
     if GetInventoryItemID("player", 16) and not sContains(GetTemporaryEnchant(16), "Жизнь Земли") and DoSpell("Оружие жизни земли") then return end
 
-    if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
-
     local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
     local unitWithShield, threatLowHPUnit, threatLowHP, notfullhpmembers = nil, nil, 1000, 0
 
     for i=1,#members do 
         local u = members[i]
         local h = UnitHealth100(u)
-        if HasMyBuff("Щит земли", 5, u) then unitWithShield = u end
+        if (select(4, HasMyBuff("Щит земли", 5, u)) or 0) > 1  then unitWithShield = u end
         if (UnitThreatAlert(u) == 3) and (h < threatLowHP) and (not IsOneUnit(u, "player")) then
            threatLowHPUnit = u  
            threatLowHP = h 
@@ -154,17 +155,9 @@ function HealRotation()
 
             if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target") and  DoSpell("Выброс лавы") then return end
 
-            --[[if IsAOE() and PlayerInPlace() then
-                if DoSpell("Цепная молния") then return end
-            else
-                if DoSpell("Молния") then return end    
-            end]] 
         end
     end
 
-
-
-    
     if PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
                         
         if h < 38 and DoSpell("Исцеляющий всплеск", u) then return end
@@ -186,6 +179,8 @@ function HealRotation()
         end
         
     end
+
+    if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
 
     if (h > 60 or not PlayerInPlace()) and myMana > 50 and (CanInterrupt or IsPvP()) then
         if IsSpellNotUsed("Очищение духа", 5) and TryDispel(IUNITS) then return  end
@@ -212,15 +207,17 @@ function TryHeal()
         if not (IsArena() or InDuel()) then
             if hp < 35 then UseHealPotion() end
         end
-        if hp < 40 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-        if hp < (IsCtr() and 99 or 50) then DoSpell("Исцеляющий всплеск", "player")  return true end
-        if hp < 40 then return true end        
         if teammate then
             local t = UnitHealth100(teammate)
-            if t < 40 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-            if CanHeal(teammate) and t < (IsCtr() and 99 or 50) and  DoSpell("Исцеляющий всплеск", teammate) then return true end
-            if t < 40 then return true end
+            if t < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
+            if CanHeal(teammate) and t < (IsCtr() and 99 or 25) and  DoSpell("Исцеляющий всплеск", teammate) then return true end
+            if t < 20 then return true end
         end
+        
+        if hp < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
+        if hp < (IsCtr() and 99 or 25) then DoSpell("Исцеляющий всплеск", "player")  return true end
+        if hp < 20 then return true end 
+        
         
     end
     if IsSpellInUse("Исцеляющий всплеск") then return true end

@@ -1,5 +1,7 @@
 ﻿-- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
+local GetTime = GetTime
+------------------------------------------------------------------------------------------------------------------
 function IsTotemPushedNow(i)
     local _, totemName, startTime, duration = GetTotemInfo(i)
     if totemName and startTime and (GetTime() - startTime < 5) then return true end
