@@ -24,17 +24,17 @@ SetCommand("mount",
 
         if InGCD() or IsPlayerCasting() then return end
 
-        --[[if IsSwimming() and not HasBuff("Хождение по воде", 1, "player") and DoSpell("Хождение по воде", "player") then 
+        if IsSwimming() and not HasBuff("Хождение по воде", 1, "player") and DoSpell("Хождение по воде", "player") then 
             TimerStart('Mount')
             return true
-        end]]
+        end
 
         if IsMounted() or CanExitVehicle()  then
             TimerStart('Mount')
             return true
         end
 
-        if not HasBuff("Призрачный волк") and InCombatLockdown() or IsArena() or not PlayerInPlace() or not IsOutdoors() or IsSwimming() then
+        if not HasBuff("Призрачный волк") and InCombatLockdown() or IsArena() or not PlayerInPlace() or not IsOutdoors() then
             DoSpell("Призрачный волк") 
             TimerStart('Mount')
             return true

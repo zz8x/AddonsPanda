@@ -49,7 +49,10 @@ local function CheckCast()
     if not spell then return end
     local target = GetLastSpellTarget(spell)
     if not target then return end
-    if not InRange(spell, target) then oexecute("SpellStopCasting()") end
+    if not InRange(spell, target) then 
+        chat('Stop '.. spell .. ' ' .. target)
+        oexecute("SpellStopCasting()") 
+    end
 end
 local dispelTypesHeal = {"Curse", "Magic"}
 function HealRotation()
@@ -124,8 +127,8 @@ function HealRotation()
         end
     end
 
-    if h < 99 and DoSpell("Быстрина", u) then return end
-    if h < 99 and DoSpell("Высвободить чары стихий", u) then return end
+    if h < (IsCtr() and 100 or 98) and DoSpell("Быстрина", u) then return end
+    if h < (IsCtr() and 100 or 98) and DoSpell("Высвободить чары стихий", u) then return end
 
     local GreatHealingWaveHeal = GetSpellAmount("Великая волна исцеления", 12000) * 1.2
     local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000) * 1.2
@@ -137,8 +140,8 @@ function HealRotation()
             local u = members[i]
             local aura = InControl(u, 2)
             if aura then
-                local debuffType = select(5, HasDebuff(aura)) 
-                if tContains(dispelTypesHeal, debuffType) then 
+                local debuffType = select(5, UnitDebuff(u, aura, true)) 
+                if debuffType and tContains(dispelTypesHeal, debuffType) then 
                     chat('Диспелим контроль '..aura..' с ' .. u)
                     TryDispel(u)
                     return 
@@ -163,10 +166,10 @@ function HealRotation()
             return 
         end
 
-        if h < 90 and myMana > 40 and HasBuff("Быстрина", 2.5, u) then
+        if h < (IsCtr() and 100 or 90) and myMana > 40 and (IsCtr() or HasBuff("Быстрина", 2.5, u)) then
             for i = 1, #members do
                 local u2 = members[i]
-                if UnitHealth100(u2) < 90 and InDistance(u, u2, 12) then
+                if UnitHealth100(u2) < (IsCtr() and 100 or 90) and InDistance(u, u2, 12.5) then
                     DoSpell("Цепное исцеление", u)
                     return
                 end

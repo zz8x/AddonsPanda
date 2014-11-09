@@ -48,7 +48,8 @@ local function updateFaceTotTarget(event, ...)
       spellId, spellName, spellSchool,                                                                     
       amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing = ...
       
-    if type:match("SPELL_CAST_FAILED") and sourceGUID == UnitGUID("player") and amount == "Цель должна быть перед вами." then
+    if type:match("SPELL_CAST_FAILED") and sourceGUID == UnitGUID("player") 
+        and (amount == "Цель должна быть перед вами." or amount == "Цель должна быть перед вами.") then
         FaceToTarget()
     end
 end
@@ -155,12 +156,11 @@ function UpdateIdle(elapsed)
         echo("Требуется магичеcкое действие!!!", true) 
         return 
     end
+    if IsBattleground() and UnitIsDead("player") and not UnitIsGhost("player") then oexecute("RepopMe()") end
 
     if UpdateCommands() then return end
     
     if Paused or UnitIsDeadOrGhost("player") then return end
-
-    if IsBattleground() and UnitIsDead("player") and not UnitIsGhost("player") then oexecute("RepopMe()") end
 
     if IsFarm() then
         if CanAttack("target") then looted = false end
@@ -182,7 +182,7 @@ function UpdateIdle(elapsed)
         if not IsAttack() and LootFrame:IsVisible() then return end
     end
 
-    if IsMouse(3) and IsValidTarget("mouseover") and not IsOneUnit("target", "mouseover") then 
+    if IsMouse(3) and UnitExists("mouseover") and not IsOneUnit("target", "mouseover") then 
         oexecute('FocusUnit("mouseover")')
     end
 

@@ -363,7 +363,7 @@ end
 ------------------------------------------------------------------------------------------------------------------
 function IsOneUnit(unit1, unit2)
     if not UnitExists(unit1) or not UnitExists(unit2) then return false end
-    return UnitGUID(unit1) == UnitGUID(unit2)
+    return unit1 == unit2 or UnitGUID(unit1) == UnitGUID(unit2)
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -448,7 +448,8 @@ end
 ------------------------------------------------------------------------------------------------------------------
 function InDistance(unit1,unit2, distance)
   local d = CheckDistance(unit1, unit2)
-  return d and d ~= 0 and d < distance
+  if unit1 ~= unit2 then print("InDistance", unit1, unit2, d, d < distance) end
+  return d < distance
 end
 
 ------------------------------------------------------------------------------------------------------------------
@@ -465,7 +466,6 @@ end
 ------------------------------------------------------------------------------------------------------------------
 function PlayerFacingTarget(unit)
     if not UnitExists(unit) or IsOneUnit("player",unit) then return false end
-
     local x1,y1,_,facing = oinfo("player")
     local x2,y2 = oinfo(unit)
     local yawAngle = atan2(y1 - y2, x1 - x2) - deg(facing)
