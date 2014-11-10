@@ -268,15 +268,15 @@ local function UpdateHarmfulSpell(event, ...)
 end
 AttachEvent('COMBAT_LOG_EVENT_UNFILTERED', UpdateHarmfulSpell)
 -------------------------------------------------------------------------------------------------------------
-function UpdateAutoFreedom(event, ...)
+local function updateAutoFreedom(event, ...)
     local timestamp, type, hideCaster,                                                                      
       sourceGUID, sourceName, sourceFlags, sourceRaidFlags, destGUID, destName, destFlags, destRaidFlags,   
       spellId, spellName, spellSchool,                                                                     
       amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing = ...
     if sourceGUID == UnitGUID("player") and amount and sContains(amount, "Действие невозможно")  then
-        chat(amount)
         TimerStart('Control')
+        chat(amount)
     end
 end
-AttachEvent("COMBAT_LOG_EVENT_UNFILTERED", UpdateAutoFreedom)
+AttachEvent("COMBAT_LOG_EVENT_UNFILTERED", updateAutoFreedom)
 ------------------------------------------------------------------------------------------------------------------

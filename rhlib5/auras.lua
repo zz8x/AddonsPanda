@@ -1,5 +1,30 @@
 -- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
+local tooltip
+local function GetTooltip()
+     if tooltip == nil then
+        tooltip = CreateFrame("GameTooltip", "EnchantTooltip")
+        tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+        tooltip.left = {}
+        tooltip.right = {}
+        -- Most of the tooltip lines share the same text widget,
+        -- But we need to query the third one for cooldown info
+        for i = 1, 30 do
+            tooltip.left[i] = tooltip:CreateFontString()
+            tooltip.left[i]:SetFontObject(GameFontNormal)
+            if i < 5 then
+                tooltip.right[i] = tooltip:CreateFontString()
+                tooltip.right[i]:SetFontObject(GameFontNormal)
+                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[i])
+            else
+                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[4])
+            end
+        end 
+    end
+    tooltip:ClearLines()
+    return tooltip
+end
+------------------------------------------------------------------------------------------------------------------
 local GetTime = GetTime
 -- Универсальный внутренний метод, для работы с бафами и дебафами
 -- HasAura('auraName' or {'aura1', ...}, minExpiresTime(s), 'target' or {'target', 'focus', ...}, UnitDebuff or UnitBuff or UnitAura, bool AuraCaster = player)
@@ -62,34 +87,37 @@ function HasMyDebuff(aura, last, target)
 end
 
 ------------------------------------------------------------------------------------------------------------------
--- using: HasTemporaryEnchant(16 or 17)
-local enchantTooltip
-function GetTemporaryEnchant(slot)
-    if enchantTooltip == nil then
-        enchantTooltip = CreateFrame("GameTooltip", "EnchantTooltip")
-        enchantTooltip:SetOwner(UIParent, "ANCHOR_NONE")
-        enchantTooltip.left = {}
-        enchantTooltip.right = {}
+local tooltip
+local function GetTooltip()
+     if tooltip == nil then
+        tooltip = CreateFrame("GameTooltip", "EnchantTooltip")
+        tooltip:SetOwner(UIParent, "ANCHOR_NONE")
+        tooltip.left = {}
+        tooltip.right = {}
         -- Most of the tooltip lines share the same text widget,
         -- But we need to query the third one for cooldown info
         for i = 1, 30 do
-            enchantTooltip.left[i] = enchantTooltip:CreateFontString()
-            enchantTooltip.left[i]:SetFontObject(GameFontNormal)
+            tooltip.left[i] = tooltip:CreateFontString()
+            tooltip.left[i]:SetFontObject(GameFontNormal)
             if i < 5 then
-                enchantTooltip.right[i] = enchantTooltip:CreateFontString()
-                enchantTooltip.right[i]:SetFontObject(GameFontNormal)
-                enchantTooltip:AddFontStrings(enchantTooltip.left[i], enchantTooltip.right[i])
+                tooltip.right[i] = tooltip:CreateFontString()
+                tooltip.right[i]:SetFontObject(GameFontNormal)
+                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[i])
             else
-                enchantTooltip:AddFontStrings(enchantTooltip.left[i], enchantTooltip.right[4])
+                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[4])
             end
         end 
-        enchantTooltip:ClearLines()
     end
+    tooltip:ClearLines()
+    return tooltip
+end
+------------------------------------------------------------------------------------------------------------------
+-- using: HasTemporaryEnchant(16 or 17)
+--/run print(GetTemporaryEnchant(16))
+function GetTemporaryEnchant(slot)
+    local enchantTooltip = GetTooltip()
     enchantTooltip:SetInventoryItem("player", slot)
-    local n,h = enchantTooltip:GetItem()
-
     local nLines = enchantTooltip:NumLines()
-
     for i = 1, nLines do
         local txt = enchantTooltip.left[i]
         if ( txt:GetTextColor() == 0 ) then
@@ -102,3 +130,15 @@ function GetTemporaryEnchant(slot)
         end
     end
 end
+
+--/run GetDebuffDesc("player", 1)
+function GetDebuffDesc(unit, i)
+    local tooltip = GetTooltip()
+    tooltip:SetUnitDebuff(unit,i);
+    local nLines = tooltip:NumLines()
+    for i = 1, nLines do
+        local txt = tooltip.left[i]
+        print(txt:GetText() )
+    end
+end
+        
