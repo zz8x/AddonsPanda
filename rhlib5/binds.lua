@@ -275,7 +275,7 @@ local function updateAutoFreedom(event, ...)
       amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing = ...
     if sourceGUID == UnitGUID("player") and amount and sContains(amount, "Действие невозможно")  then
         TimerStart('Control')
-        chat(amount)
+        chat(amount, 1, 0, 0)
     end
 end
 AttachEvent("COMBAT_LOG_EVENT_UNFILTERED", updateAutoFreedom)

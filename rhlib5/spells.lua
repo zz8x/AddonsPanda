@@ -51,7 +51,8 @@ function GetKickInfo(target)
     if d > l * 0.8 then d = l - 0.3 end -- если каст меньше задержки, уменьшаем задержку
     if c - s < d then return end -- если пока рано сбивать, выходим (задержка)
     if t < (channel and 0.5 or 0.2) then  return  end -- если уже докастил, нет смысла трепыхаться, тунелинг - нет смысла сбивать последний тик
-    local m = " -> " .. spell .. " ("..target..")"
+    local name = UnitName(target)
+    local m = " -> " .. spell .. " ("..name..")"
     return spell, t, channel, notinterrupt, m
 end
 

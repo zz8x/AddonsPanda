@@ -12,6 +12,7 @@ function Idle()
     end
     if InCombatLockdown() and not IsReadySpell("Тотем трепета") and DoSpell("Зов Стихий") then return end
     if AutoFreedom() then return end
+
     if IsAttack() or IsMouse(3) then
         if HasBuff("Парашют") then oexecute('CancelUnitBuff("player", "Парашют")') return end
         if HasBuff("Призрачный волк") then oexecute('CancelUnitBuff("player", "Призрачный волк")') return end
@@ -28,7 +29,7 @@ function Idle()
             if CanAttack(t) and UnitAffectingCombat(t) and HasBuff("Отражение заклинания", 1, t) and DoSpell("Пронизывающий ветер", t) then return end
         end
     end
-
+    
     if HasSpell("Быстрина") then
         HealRotation()
         return
@@ -160,7 +161,10 @@ function HealRotation()
         if h > 40 and h < (IsCtr() and 100 or 90) and myMana > 40 and UnitIsPlayer(u) and (IsCtr() or HasBuff("Быстрина", 2.5, u)) then
             for i = 1, #members do
                 local u2 = members[i]
-                if UnitHealth100(u2) < (IsCtr() and 100 or 90) and UnitIsPlayer(u2) and InDistance(u, u2, 12.5) then
+                if UnitHealth100(u2) < (IsCtr() and 100 or 90) and UnitIsPlayer(u2) and not IsOneUnit(u, u2) and InDistance(u, u2, 12.5) then
+                    local name = UnitName(u)
+                    local name2 = UnitName(u2)
+                    --chat("Цепное исцеление -> " .. name .. " -> " .. name2 )
                     DoSpell("Цепное исцеление", u)
                     return
                 end

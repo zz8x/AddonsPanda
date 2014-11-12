@@ -1,5 +1,27 @@
 -- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
+local sqrt = sqrt
+local UnitExists = UnitExists
+local GetUnitSpeed = GetUnitSpeed
+local IsInInstance = IsInInstance
+local WorldFrame = WorldFrame
+local InCombatLockdown = InCombatLockdown
+local CheckInteractDistance = CheckInteractDistance
+local UnitAffectingCombat = UnitAffectingCombat
+local UnitThreatSituation = UnitThreatSituation
+local UnitThreat = UnitThreat
+local UnitIsPlayer = UnitIsPlayer
+local UnitClassification = UnitClassification
+local UnitHealth = UnitHealth
+local UnitHealthMax = UnitHealthMax
+local UnitCanAttack = UnitCanAttack
+local UnitIsDeadOrGhost = UnitIsDeadOrGhost
+local UnitName = UnitName
+local UnitIsCharmed = UnitIsCharmed
+local UnitIsEnemy = UnitIsEnemy
+local UnitClass = UnitClass
+local UnitPlayerControlled = UnitPlayerControlled
+------------------------------------------------------------------------------------------------------------------
 -- Возвращает список членов группы отсортированных по приоритету исцеления
 local members = {}
 local membersHP = {}
@@ -437,7 +459,6 @@ function PlayerInPlace()
 end
 
 ------------------------------------------------------------------------------------------------------------------
-local sqrt = sqrt
 function CheckDistance(unit1,unit2)
   if not UnitExists(unit1) or not UnitExists(unit2) or IsOneUnit(unit1,unit2) then return 0 end
   local x1,y1,z1,rot1 = oinfo(unit1) 
@@ -447,9 +468,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 function InDistance(unit1,unit2, distance)
-  local d = CheckDistance(unit1, unit2)
-  if unit1 ~= unit2 then print("InDistance", unit1, unit2, d, d < distance) end
-  return d < distance
+  return CheckDistance(unit1, unit2) < distance
 end
 
 ------------------------------------------------------------------------------------------------------------------
