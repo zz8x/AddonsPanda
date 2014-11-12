@@ -119,6 +119,23 @@ function TryDispel(targets)
     end
     return unit and DoSpell(dispelSpell, unit)
 end
+
+function TryDispelControl(members)
+    if IsReadySpell("Очищение духа") then
+        for i = 1, #members do
+            local u = members[i]
+            local aura = InControl(u, 2)
+            if aura then
+                local debuffType = select(5, UnitDebuff(u, aura, true)) 
+                if debuffType and tContains(dispelTypesHeal, debuffType) then 
+                    chat('Диспелим контроль '..aura..' с ' .. UnitName(u))
+                    return DoSpell(dispelSpell, u)
+                end
+            end
+        end
+    end
+    return false
+end
 ------------------------------------------------------------------------------------------------------------------
 local stealSpell = "Развеивание магии"
 local stealTypes = {"Magic"}
@@ -127,10 +144,7 @@ local function stealTarget(unit)
     for i = 1, 40 do
         name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitBuff(unit, i,true) 
         if name and isStealable and (expirationTime - GetTime() >= 3 or expirationTime == 0) and tContains(stealTypes, debuffType) then
-            if DoSpell(stealSpell, unit) then
-                return true
-            end
-            return false
+            return DoSpell(stealSpell, unit)
         end
     end
     return false

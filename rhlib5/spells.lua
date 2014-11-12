@@ -41,7 +41,7 @@ function GetKickInfo(target)
         channel = true
     end
     if not spell then return nil end
-    if IsPvP() and not InInterruptRedList(spell) then return end
+    if IsPvP() and not tContains(InterruptRedList, spell) then return end
     local s = startTime / 1000 -- время начала каста
     local c = GetTime() -- текущее время
     local e = endTime / 1000 -- время конца каста 
@@ -441,6 +441,9 @@ function UseSpell(spellName, target)
                 end
             end
         end
-    if Debug then print(spellName, cost, target) end
+    if Debug then 
+        local name = UnitName(target)
+        chat(spellName .. " -> ".. name, 0.4,0.4,0.4) 
+    end
     return true
 end

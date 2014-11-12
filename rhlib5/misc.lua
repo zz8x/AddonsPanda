@@ -17,12 +17,17 @@ function echo(msg)
     UIErrorsFrame:AddMessage(msg, 0.0, 1.0, 0.0, 53, 2);
 end
 ------------------------------------------------------------------------------------------------------------------
-local lastMsg = ""
-function chat(msg)
-    if msg == lastMsg and TimerLess('EchoMsg', 2) then return end
-    DEFAULT_CHAT_FRAME:AddMessage(msg, 1.0, 0.5, 0.5);
-    TimerStart('EchoMsg')
-    lastMsg = msg
+local lastMsg = {}
+function chat(msg, r, g, b, key)
+    r = r or 1.0
+    b = b or 0.5
+    g = g or 0.5
+    local key  =  r * 100 + g * 10 + b
+    if lastMsg[key] == msg and TimerLess('EchoMsg'..key, 2) then return end
+
+    DEFAULT_CHAT_FRAME:AddMessage(msg, r, b, g);
+    TimerStart('EchoMsg'..key)
+    lastMsg[key] = msg
 end
 ------------------------------------------------------------------------------------------------------------------
 function tContainsKey(table, key)

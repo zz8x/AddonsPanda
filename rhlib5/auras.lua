@@ -1,9 +1,14 @@
 -- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
+local UnitAura = UnitAura
+local UnitBuff = UnitBuff
+local UnitDebuff = UnitDebuff
+local GetTime = GetTime
+------------------------------------------------------------------------------------------------------------------
 local tooltip
-local function GetTooltip()
+function GetTooltip()
      if tooltip == nil then
-        tooltip = CreateFrame("GameTooltip", "EnchantTooltip")
+        tooltip = CreateFrame("GameTooltip", "hiddenTooltip")
         tooltip:SetOwner(UIParent, "ANCHOR_NONE")
         tooltip.left = {}
         tooltip.right = {}
@@ -25,11 +30,10 @@ local function GetTooltip()
     return tooltip
 end
 ------------------------------------------------------------------------------------------------------------------
-local GetTime = GetTime
 -- Универсальный внутренний метод, для работы с бафами и дебафами
 -- HasAura('auraName' or {'aura1', ...}, minExpiresTime(s), 'target' or {'target', 'focus', ...}, UnitDebuff or UnitBuff or UnitAura, bool AuraCaster = player)
-local function HasAura(aura, last, target, method, my)
-    if aura == nil then return false end
+function HasAura(aura, last, target, method, my)
+    if aura == nil then return nil end
     if method == nil then method = UnitAura end
     if target == nil then target = "player" end
     if last == nil then last = 0.1 end
@@ -41,25 +45,20 @@ local function HasAura(aura, last, target, method, my)
 		end
 		return name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId
     end
-    
-    if not UnitExists(target) then return false end
-    if (type(aura) == 'table' and #aura > 0) then
-		for i = 1, #aura do 
-			name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId = HasAura(aura[i], last, target, method, my)
-			if name then break end
-		end
-		return name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId
-    end
-
+    if not UnitExists(target) then return nil end
     for i = 1, 40 do
         name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = method(target, i)
-        if not name then break end
-        if (sContains(name, aura) or (debuffType and sContains(debuffType, aura)))
-            and (expirationTime - GetTime() >= last or expirationTime == 0) 
-            and (not my or unitCaster == "player") then
-            result = name
-            break
-        end 
+        if not name then return nil end
+        if (expirationTime - GetTime() >= last or expirationTime == 0) and (not my or unitCaster == "player") then
+            if (type(aura) == 'table') then
+                for i = 1, #aura do 
+                    local a = aura[i]
+                    if (sContains(name, a) or (debuffType and sContains(debuffType, a))) then break end 
+                end
+            else
+                if (sContains(name, aura) or (debuffType and sContains(debuffType, aura))) then break end 
+            end
+        end
     end 
     return name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId
 end
@@ -85,32 +84,6 @@ end
 function HasMyDebuff(aura, last, target)
     return HasDebuff(aura, last, target, true)
 end
-
-------------------------------------------------------------------------------------------------------------------
-local tooltip
-local function GetTooltip()
-     if tooltip == nil then
-        tooltip = CreateFrame("GameTooltip", "EnchantTooltip")
-        tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-        tooltip.left = {}
-        tooltip.right = {}
-        -- Most of the tooltip lines share the same text widget,
-        -- But we need to query the third one for cooldown info
-        for i = 1, 30 do
-            tooltip.left[i] = tooltip:CreateFontString()
-            tooltip.left[i]:SetFontObject(GameFontNormal)
-            if i < 5 then
-                tooltip.right[i] = tooltip:CreateFontString()
-                tooltip.right[i]:SetFontObject(GameFontNormal)
-                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[i])
-            else
-                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[4])
-            end
-        end 
-    end
-    tooltip:ClearLines()
-    return tooltip
-end
 ------------------------------------------------------------------------------------------------------------------
 -- using: HasTemporaryEnchant(16 or 17)
 --/run print(GetTemporaryEnchant(16))
@@ -130,15 +103,3 @@ function GetTemporaryEnchant(slot)
         end
     end
 end
-
---/run GetDebuffDesc("player", 1)
-function GetDebuffDesc(unit, i)
-    local tooltip = GetTooltip()
-    tooltip:SetUnitDebuff(unit,i);
-    local nLines = tooltip:NumLines()
-    for i = 1, nLines do
-        local txt = tooltip.left[i]
-        print(txt:GetText() )
-    end
-end
-        

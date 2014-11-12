@@ -77,41 +77,9 @@ SetCommand("frostshock",
         end
     end, 
     function(target) 
-        return not InCombatLockdown() or not CanControl(target) or HasDebuff("Ледяной шок", 0,1, target) or not IsSpellNotUsed("Ледяной шок", 1) 
+        return not InCombatLockdown() or not CanMagicAttack(target) or HasDebuff("Ледяной шок", 0,1, target) or not IsSpellNotUsed("Ледяной шок", 1) 
     end
 )
-
-------------------------------------------------------------------------------------------------------------------
---[[SetCommand("wolf", 
-    function() 
-        if DoSpell("Дух дикого волка") then
-            echo("Волки!", 1)
-        end
-    end, 
-    function() 
-        return not CanControl("target") or not IsSpellNotUsed("Дух дикого волка", 1) 
-    end
-)
-
-------------------------------------------------------------------------------------------------------------------
-SetCommand("root", 
-    function() 
-        echo("Root!",1)
-        return TryTotems()
-    end, 
-    function() 
-        if ForceRoot then
-            if HasTotem("Тотем оков земли") then
-                ForceRoot = false
-                return true
-            end
-        else
-            ForceRoot = true
-        end
-        return false  
-    end
-)
-]]
 ------------------------------------------------------------------------------------------------------------------
 local druidForm = {"облик", "Древо Жизни"}
 SetCommand("hex", 
@@ -133,7 +101,7 @@ SetCommand("hex",
             return true 
         end
         if not IsSpellNotUsed(spell, 1)  then 
-            echo("Успещно прожали "..spell.."!")
+            echo("Успешно прожали "..spell.."!")
             return true 
         end
 
@@ -180,12 +148,8 @@ SetCommand("fix",
     function(force, target) 
         local spell = "Сковать элементаля"
 
-        if not CanControl(target) then 
-            echo("Имунен к контролю!")
-            return true 
-        end
         if not IsSpellNotUsed(spell, 1)  then 
-            echo("Успещно прожали "..spell.."!")
+            echo("Успешно прожали "..spell.."!")
             return true 
         end
 

@@ -620,12 +620,26 @@ function TryFreedom()
     return HasSpell(freedomSpell) and DoSpell(freedomSpell) or UseEquippedItem(freedomItem)
 end
 
+local ctrList = { "Сон", "Страх", "Дрожь", "Превращение", "Сглаз", "Подчинение", "Ослепление", "Ошеломление"}
 function AutoFreedom()
     if not IsReadyFreedom() then return false end
     if not TimerStarted('Control') or TimerMore('Control', 2) then return false end
     -- контроли или сапы (по атаке)
-    debuff = InStun("player", 2) or (IsAttack() and InSap("player", 2))
-    -- больше 2 сек
+    local debuff
+    local auras = InControl("player", 2, true)
+    if auras then
+        
+        print(auras)
+        if sContains(auras, "Оглушение") then
+            debuff = "Оглушение"
+        elseif IsAttack() then
+            for i = 1, #ctrList do
+                if sContains(auras, ctrList[i]) then 
+                    debuff = ctrList[i]
+                end
+            end
+        end
+    end
     if debuff then
         if TryFreedom() then
             chat('freedom: ' .. debuff)

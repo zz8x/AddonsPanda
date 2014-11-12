@@ -1,12 +1,9 @@
 ﻿-- Rotation Helper Library by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
---Оглушение
---Неуязвимость, неспособность действовать.
---Неуязвимость. Неспособность к атакующим действиям
+local SpellsRedList = SpellsRedList
 
-StunList = {
-}
-
+--{"Оглушение", "Неуязвимость, неспособность", "Неуязвимость. Неспособность"}
+------------------------------------------------------------------------------------------------------------------
 --Паралич
 --Дезориентация
 --Сон
@@ -22,37 +19,21 @@ StunList = {
 --Скованность
 --Сглаз
 --Подчинение
-SappedList  = {
-}
-
-
+------------------------------------------------------------------------------------------------------------------
 --страх подчинение сон
-TotemList = {
-    "Спячка"
-}
-
-
 ------------------------------------------------------------------------------------------------------------------
 -- Можно законтролить игрока
-local magicControlList = {"Покаяние", "Смерч", "Молот правосудия"} -- TODO: дополнить
-local physicControlList = {"Молот правосудия", "Калечение", "Оглушить"} -- TODO: дополнить
-local imperviousList = {"Вихрь клинков", "Зверь внутри"}
-local physicsList = {"Незыблемость льда"}
 CanControlInfo = ""
-function CanControl(target, spell)
+local imperviousList = {"Вихрь клинков", "Зверь внутри", "Оскверненная земля"}
+local physicsList = {"Незыблемость льда", "Длань защиты"} --Перерождение
+function CanControl(target, magic, physic)
     CanControlInfo = ""
     if nil == target then target = "target" end 
-    local physic = false
-    local magic = false
-    if spell then
-        magic = tContains(magicControlList, spell)
-        physic = tContains(physicControlList, spell)
-    end 
     if not (magic and CanMagicAttack or CanAttack)(target) then
         CanControlInfo = (magic and CanMagicAttackInfo or CanAttackInfo) 
         return false
     end
-    local aura = HasBuff(imperviousList, 0.1, target) or (physic and HasBuff(physicsList, 0.1, target))
+    local aura =  HasBuff(imperviousList, 0.1, target) or (physic and HasBuff(physicsList, 0.1, target))
     if aura then
         CanControlInfo = aura
         return false
@@ -60,22 +41,35 @@ function CanControl(target, spell)
     return true   
 end
 
-function InStun(target, t) 
-    return HasDebuff(StunList, t, target)
-end
 
-function InSap(target, t) 
-    return HasDebuff(SappedList, t, target)
-end
+local tooltipCollection = {}
+local tooltip
+function InControl(target, last, collectTooltips) 
+    tooltip = GetTooltip()
+    wipe(tooltipCollection)
+    for i = 1, 40 do
+        local name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitDebuff(target, i)
+        if not name then break end
+        if expirationTime == 0 or expirationTime - GetTime() >= last and SpellsRedList[spellId] == "CC" then
+            if collectTooltips == nil then 
+                return name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId 
+            end
 
-function InControl(target, t) 
-    return InStun(target, t) or InSap(target, t)
+            tooltip:SetUnitDebuff(target, i);
+            local nLines = tooltip:NumLines()
+            for i = 1, nLines do
+                tooltipCollection[#tooltipCollection + 1] = tooltip.left[i]:GetText()
+            end
+        end 
+    end 
+    if #tooltipCollection > 0 then return table.concat( tooltipCollection) end
+    return nil
 end
-
 ------------------------------------------------------------------------------------------------------------------
 -- можно использовать магические атаки против игрока
 CanMagicAttackInfo = ""
-local magicList = {"Отражение заклинания", "Антимагический панцирь", "Эффект тотема заземления"}
+local magicList = {"Антимагический панцирь", "Плащ Теней", "Символ ледяной глыбы"  }
+local magicReflectList = {"Отражение заклинания", "Дзен-медитация",  "Эффект тотема заземления"}
 function CanMagicAttack(target)
     CanMagicAttackInfo = ""
     if nil == target then target = "target" end 
@@ -83,7 +77,10 @@ function CanMagicAttack(target)
         CanMagicAttackInfo = CanAttackInfo
         return false
     end
-    local aura = HasBuff(magicList, 0.1, target) 
+    local aura = HasBuff(magicList, 0.1, target)
+    if not aura and not IsAttack() then
+        aura = HasBuff(magicReflectList, 0.1, target)
+    end
     if aura then
         CanMagicAttackInfo = aura
         return false
@@ -93,7 +90,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------
 -- можно атаковать игрока (в противном случае не имеет смысла просаживать кд))
-local immuneList = {"Божественный щит", "Ледяная глыба", "Сдерживание"}
+local immuneList = {"Божественный щит", "Ледяная глыба", "Сдерживание", "Закон кармы", "Смерч", "Слияние с Тьмой"}
 CanAttackInfo = ""
 function CanAttack(target)
     CanAttackInfo = ""
@@ -106,7 +103,8 @@ function CanAttack(target)
         CanAttackInfo = "Цель в лосе."
         return false
     end
-    local aura = HasBuff(immuneList, 0.01, target) or HasDebuff("Смерч", 0.01, target)
+
+    local aura = HasAura(immuneList, 0.01, target)
     if aura then
         CanAttackInfo = "Цель имунна: " .. aura
         return false
@@ -115,66 +113,14 @@ function CanAttack(target)
 end
 
 ------------------------------------------------------------------------------------------------------------------
--- касты обязательные к сбитию в любом случае
-local InterruptRedList = {
-    "Великая волна исцеления",
-    "Волна исцеления",
-    "Выброс лавы",
-    "Сглаз",
-    "Цепное исцеление",
-    "Превращение",
-    "Прилив сил",
-    "Нестабильное колдовство",
-    "Блуждающий дух",
-    "Стрела Тьмы",
-    "Сокрушительный бросок",
-    "Стрела Хаоса",
-    "Вой ужаса",
-    "Страх",
-    "Похищение жизни",
-    "Похищение души",
-    "Свет небес",
-    "Вспышка Света",
-    "Быстрое исцеление",
-    "Исповедь",
-    "Божественный гимн",
-    "Связующее исцеление",
-    "Массовое рассеивание",
-    "Прикосновение вампира",
-    "Сожжение маны",
-    "Молитва исцеления",
-    "Исцеление",
-    "Контроль над разумом",
-    "Великое исцеление",
-    "Покровительство Природы",
-    "Звездный огонь",
-    "Смерч",
-    "Спокойствие потоковое",
-    "Восстановление",
-    "Целительное прикосновение",
-    "Изгнание зла", 
-    "Сковывание нежити",
-    "Спячка",
-    "Исцеляющий всплеск",
-    "Божественный свет",
-    "Отпугивание зверя",
-    "Святое сияние",
-    "Божественный свет",
-    "Звездный поток",
-    "Рука Гул'дана"
-}
-
-function InInterruptRedList(spellName)
-    return tContains(InterruptRedList, spellName)
-end
-------------------------------------------------------------------------------------------------------------------
-local nointerruptBuffs = {"Мастер аур", "Сила духа"}
+local nointerruptBuffs = {"Аура благочестия", "Твердая решимость"}
 function IsInterruptImmune(target, t)
     if target == nil then target = "target" end
     if t == nil then t = 0.1 end
     return HasBuff(nointerruptBuffs, t , target)
 end
 ------------------------------------------------------------------------------------------------------------------
+local ctrList = { "Сон", "Страх", "Дрожь", "Превращение", "Сглаз", "Подчинение", "Ослепление", "Ошеломление"}
 function IsNotAttack(target)
     if not target then target = "target" end
     -- не бьем в имун
@@ -186,10 +132,17 @@ function IsNotAttack(target)
     else
         if not stop then
             -- чтоб контроли не сбивать
-            local aura = InSap(target)
-            if aura then 
-                msg = msg .. "На цели " .. aura .. " "
-                result = true
+            local auras = InControl(target, 0.3, true)
+            if auras then
+                print(auras)
+                if not sContains(auras, "Оглушение") then
+                    for i = 1, #ctrList do
+                        if sContains(auras, ctrList[i]) then 
+                            msg = msg .. "На цели " .. ctrList[i] .. " "
+                            result = true
+                        end
+                    end
+                end
             end
         end
     end

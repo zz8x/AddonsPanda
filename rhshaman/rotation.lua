@@ -54,7 +54,6 @@ local function CheckCast()
         oexecute("SpellStopCasting()") 
     end
 end
-local dispelTypesHeal = {"Curse", "Magic"}
 function HealRotation()
     CheckCast()
     local members = GetHealingMembers(UNITS)
@@ -65,6 +64,7 @@ function HealRotation()
 
     if HasBuff("Стремительность предков") then
         DoSpell("Великая волна исцеления", u)
+        chat("Мгновенно Великая волна исцеления " .. UnitName(u))
         return 
     end
 
@@ -75,20 +75,24 @@ function HealRotation()
         if PlayerInPlace() and not HasTotem(3) then
             if myMana < 50 and IsReadySpell("Тотем прилива маны") then
                  DoSpell("Тотем прилива маны") 
+                 chat("Тотем прилива маны") 
                  return
             end
             if h < 40 and IsReadySpell("Тотем целительного прилива") then
                 DoSpell("Тотем целительного прилива")
+                chat("Тотем целительного прилива")
                 return
             end
             if h < 70 and IsReadySpell("Тотем исцеляющего потока") then
                 DoSpell("Тотем исцеляющего потока")
+                chat("Тотем исцеляющего потока")
                 return
             end
         end
         if h < 60 and DoSpell("Благосклонность предков") then return true end
         if h < 60 and DoSpell("Перерождение") then return true end
         if myHP < 50 and DoSpell("Каменная форма") then return true end
+        if myHP < 40 and UseEquippedItem("Эмблема жестокости бездушного гладиатора") then return true end
     end
 
     if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
@@ -133,22 +137,9 @@ function HealRotation()
     local GreatHealingWaveHeal = GetSpellAmount("Великая волна исцеления", 12000) * 1.2
     local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000) * 1.2
 
-    if (h < 20 or (l > GreatHealingWaveHeal * 1.5)) and HasSpell("Стремительность предков") and DoSpell("Стремительность предков") then chat("Мгновенка!") return end
+    if UnitAffectingCombat(u) and UnitIsPlayer(u) and (h < 20 or (l > GreatHealingWaveHeal * 1.5)) and HasSpell("Стремительность предков") and DoSpell("Стремительность предков") then chat("Мгновенка!") return end
 
-    if IsReadySpell("Очищение духа") then
-        for i = 1, #members do
-            local u = members[i]
-            local aura = InControl(u, 2)
-            if aura then
-                local debuffType = select(5, UnitDebuff(u, aura, true)) 
-                if debuffType and tContains(dispelTypesHeal, debuffType) then 
-                    chat('Диспелим контроль '..aura..' с ' .. u)
-                    TryDispel(u)
-                    return 
-                end
-            end
-        end
-    end
+    if TryDispelControl(members) then return end
 
     if IsAttack() and h > 60 then
         if not IsInteractUnit("target") then CheckTarget() end
@@ -166,10 +157,10 @@ function HealRotation()
             return 
         end
 
-        if h < (IsCtr() and 100 or 90) and myMana > 40 and (IsCtr() or HasBuff("Быстрина", 2.5, u)) then
+        if h > 40 and h < (IsCtr() and 100 or 90) and myMana > 40 and UnitIsPlayer(u) and (IsCtr() or HasBuff("Быстрина", 2.5, u)) then
             for i = 1, #members do
                 local u2 = members[i]
-                if UnitHealth100(u2) < (IsCtr() and 100 or 90) and InDistance(u, u2, 12.5) then
+                if UnitHealth100(u2) < (IsCtr() and 100 or 90) and UnitIsPlayer(u2) and InDistance(u, u2, 12.5) then
                     DoSpell("Цепное исцеление", u)
                     return
                 end
@@ -181,7 +172,7 @@ function HealRotation()
             return
         end 
 
-        if (h < 50 or (l > HealingWaveHeal)) and HasMyBuff("Приливные волны", 1.5, "player") then
+        if (h < 50 or (l > HealingWaveHeal)) then
             DoSpell("Волна исцеления", u)
             return
         end 
@@ -191,7 +182,7 @@ function HealRotation()
     if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
 
     if (h > 60 or not PlayerInPlace()) and myMana > 50 and (CanInterrupt or IsPvP()) then
-        if IsSpellNotUsed("Очищение духа", 5) and TryDispel(IUNITS) then return  end
+        if IsSpellNotUsed("Очищение духа", 10) and TryDispel(members) then return  end
         if IsSpellNotUsed("Развеивание магии", 2) and TrySteal(ITARGETS) then return  end
     end
 
@@ -207,10 +198,12 @@ function TryHeal()
 
     if InCombatLockdown() and IsValidTarget("target") then
         local hp = UnitHealth100("player")
-        if hp < 50 and DoSpell("Каменная форма") then return true end
+       
         if not (IsArena() or InDuel()) then
             if hp < 35 then UseHealPotion() end
         end
+        if hp < 40 and UseEquippedItem("Эмблема жестокости бездушного гладиатора") then return true end
+        if hp < 50 and DoSpell("Каменная форма") then return true end
     end
 
     local members = GetHealingMembers(IUNITS)
