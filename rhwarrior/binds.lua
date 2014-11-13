@@ -24,16 +24,16 @@ local function interruptTarget(target, canStopCasting)
     if not spell then return false end
     if not notinterrupt and not IsInterruptImmune(target) then
 
-        if (channel or t < 0.8) and IsReadySpell("Зуботычина") or IsReadySpell("Отражение заклинания") then
+        if InMelee(target) and (channel or t < 0.8) and IsReadySpell("Зуботычина") then
             if canStopCasting then oexecute("SpellStopCasting()") end
-            if InMelee("target") and DoSpell("Зуботычина", target) then
+            if DoSpell("Зуботычина", target) then
                 echo("Зуботычина"..m)
                 TimerStart('Interrupt')
                 return true 
             end
         end
 
-        if (not channel and t < 1.8) and not InMelee("target") and IsReadySpell("Отражение заклинания", true) and IsHarmfulCast(spell) then
+        if not channel and IsReadySpell("Отражение заклинания") and IsHarmfulCast(spell) and IsOneUnit("player", target .. "-target") then
             if canStopCasting  then oexecute("SpellStopCasting()") end
             if DoSpell("Отражение заклинания") then
                 TimerStart('Interrupt')

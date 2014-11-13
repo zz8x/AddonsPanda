@@ -647,8 +647,6 @@ function AutoFreedom()
     local debuff
     local auras = InControl("player", 2, true)
     if auras then
-        
-        print(auras)
         if sContains(auras, "Оглушение") then
             debuff = "Оглушение"
         elseif IsAttack() then

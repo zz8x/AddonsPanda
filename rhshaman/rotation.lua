@@ -96,7 +96,7 @@ function HealRotation()
         if myHP < 40 and UseEquippedItem("Эмблема жестокости бездушного гладиатора") then return true end
     end
 
-    if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
+    --if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
 
     if GetInventoryItemID("player", 16) and not sContains(GetTemporaryEnchant(16), "Жизнь Земли") and DoSpell("Оружие жизни земли") then return end
 
@@ -160,13 +160,10 @@ function HealRotation()
 
         if h > 40 and h < (IsCtr() and 100 or 90) and myMana > 40 and UnitIsPlayer(u) and (IsCtr() or HasBuff("Быстрина", 2.5, u)) then
             for i = 1, #members do
-                local u2 = members[i]
-                if UnitHealth100(u2) < (IsCtr() and 100 or 90) and UnitIsPlayer(u2) and not IsOneUnit(u, u2) and InDistance(u, u2, 12.5) then
-                    local name = UnitName(u)
-                    local name2 = UnitName(u2)
-                    --chat("Цепное исцеление -> " .. name .. " -> " .. name2 )
+                local _u = members[i]
+                if UnitHealth100(_u) < (IsCtr() and 100 or 90) and UnitIsPlayer(_u) and not IsOneUnit(u, _u) and InDistance(u, _u, 12.5) then
                     DoSpell("Цепное исцеление", u)
-                    return
+                return
                 end
             end
         end

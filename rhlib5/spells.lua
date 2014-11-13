@@ -52,6 +52,7 @@ function GetKickInfo(target)
     if c - s < d then return end -- если пока рано сбивать, выходим (задержка)
     if t < (channel and 0.5 or 0.2) then  return  end -- если уже докастил, нет смысла трепыхаться, тунелинг - нет смысла сбивать последний тик
     local name = UnitName(target)
+    name = name or target
     local m = " -> " .. spell .. " ("..name..")"
     return spell, t, channel, notinterrupt, m
 end
@@ -444,6 +445,7 @@ function UseSpell(spellName, target)
         end
     if Debug then 
         local name = UnitName(target)
+        name = name or target
         chat(spellName .. " -> ".. name, 0.4,0.4,0.4) 
     end
     return true

@@ -134,7 +134,6 @@ function IsNotAttack(target)
             -- чтоб контроли не сбивать
             local auras = InControl(target, 0.3, true)
             if auras then
-                print(auras)
                 if not sContains(auras, "Оглушение") then
                     for i = 1, #ctrList do
                         if sContains(auras, ctrList[i]) then 
