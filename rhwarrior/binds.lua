@@ -29,8 +29,8 @@ local function interruptTarget(target, canStopCasting)
             if DoSpell("Зуботычина", target) then
                 echo("Зуботычина"..m)
                 TimerStart('Interrupt')
-                return true 
             end
+            return true 
         end
 
         if not channel and IsReadySpell("Отражение заклинания") and IsHarmfulCast(spell) and IsOneUnit("player", target .. "-target") then
@@ -38,8 +38,8 @@ local function interruptTarget(target, canStopCasting)
             if DoSpell("Отражение заклинания") then
                 TimerStart('Interrupt')
                 echo("Отражение"..m)
-                return true 
             end
+            return true 
         end
         
     end
