@@ -5,14 +5,25 @@ local function actualDistance(target)
     return InRange("Молния", target)
 end 
 local peaceBuff = {"Пища", "Питье", "Призрачный волк"}
-function Idle()
-    if TimerLess('Control', 2) and InControl("player", 5) and IsReadySpell("Тотем трепета") then
-        if HasTotem(2) ~= "Тотем трепета" and DoSpell("Тотем трепета") then return end
-        return
-    end
-    if InCombatLockdown() and not IsReadySpell("Тотем трепета") and DoSpell("Зов Стихий") then return end
-    if AutoFreedom() then return end
 
+function Idle()
+
+    if TimerLess('Control', 2) and IsReadySpell("Тотем трепета") then
+        --chat("В контроле, можно снять тотемом")
+        local auras = InControl("player", 5)
+        if auras then 
+            chat("Тотем трепета " .. auras)
+            DoSpell("Тотем трепета")
+            return
+        end
+    end
+
+    if not IsSpellNotUsed("Тотем трепета", 5) and DoSpell("Зов Стихий") then 
+        chat("Перезарядка тотемов")
+        return 
+    end
+    if AutoFreedom() then return end
+    
     if IsAttack() or IsMouse(3) then
         if HasBuff("Парашют") then oexecute('CancelUnitBuff("player", "Парашют")') return end
         if HasBuff("Призрачный волк") then oexecute('CancelUnitBuff("player", "Призрачный волк")') return end
@@ -23,13 +34,6 @@ function Idle()
     -- дайте поесть (побегать) спокойно 
     if not IsAttack() and (IsMounted() or CanExitVehicle() or HasBuff(peaceBuff)) then return end
 
-    if not FastUpdate and IsReadySpell("Пронизывающий ветер") then
-        for i = 1, #TARGETS do
-            local t = TARGETS[i]
-            if CanAttack(t) and UnitAffectingCombat(t) and HasBuff("Отражение заклинания", 1, t) and DoSpell("Пронизывающий ветер", t) then return end
-        end
-    end
-    
     if HasSpell("Быстрина") then
         HealRotation()
         return
@@ -96,7 +100,7 @@ function HealRotation()
         if myHP < 40 and UseEquippedItem("Эмблема жестокости бездушного гладиатора") then return true end
     end
 
-    --if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
+    
 
     if GetInventoryItemID("player", 16) and not sContains(GetTemporaryEnchant(16), "Жизнь Земли") and DoSpell("Оружие жизни земли") then return end
 
@@ -131,6 +135,8 @@ function HealRotation()
             return
         end
     end
+    
+    if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
 
     if h < (IsCtr() and 100 or 98) and DoSpell("Быстрина", u) then return end
     if h < (IsCtr() and 100 or 98) and DoSpell("Высвободить чары стихий", u) then return end
@@ -158,7 +164,7 @@ function HealRotation()
             return 
         end
 
-        if h > 40 and h < (IsCtr() and 100 or 90) and myMana > 40 and UnitIsPlayer(u) and (IsCtr() or HasBuff("Быстрина", 2.5, u)) then
+        if (not IsArena() or InDuel()) and h > 40 and h < (IsCtr() and 100 or 90) and myMana > 40 and UnitIsPlayer(u) and (IsCtr() or HasBuff("Быстрина", 2.5, u)) then
             for i = 1, #members do
                 local _u = members[i]
                 if UnitHealth100(_u) < (IsCtr() and 100 or 90) and UnitIsPlayer(_u) and not IsOneUnit(u, _u) and InDistance(u, _u, 12.5) then
@@ -212,12 +218,12 @@ function TryHeal()
     local u = members[1]
     local h = UnitHealth100(u)
     local l = UnitLostHP(u)
-    if h < 70 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
-    if h < 60 and DoSpell("Наставления предков") then return true end
-    if h < 40 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
-    if  PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
+    if h < 80 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
+    if h < 70 and DoSpell("Наставления предков") then return true end
+    if h < 50 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
+    if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and IsSpellNotUsed("Исцеляющий всплеск", 2) then
         if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-        if h < (IsCtr() and 99 or 25) then DoSpell("Исцеляющий всплеск", u)  return true end
+        if h < (IsCtr() and 99 or 35) then DoSpell("Исцеляющий всплеск", u)  return true end
         if h < 20 then return true end 
         TryDispel(u)
     end
@@ -246,6 +252,12 @@ function Rotation()
 
     if IsSpellNotUsed("Развеивание магии", 2) and TrySteal("target") then return end
 
+    if IsReadySpell("Пронизывающий ветер") and HasBuff("Отражение заклинания", 1, "target") and HasBuff("Отражение заклинания", 0.1, "target") then
+        if IsPlayerCasting() then oexecute("SpellStopCasting()") end
+        DoSpell("Пронизывающий ветер", "target") 
+        return 
+    end
+
     if IsShift() and IsReadySpell("Землетрясение") then
         DoSpell("Землетрясение", "target")
         return
@@ -254,7 +266,7 @@ function Rotation()
     if HasMyDebuff("Огненный шок", 5,"target") and (select(4, HasBuff("Щит молний")) or 0) > 6 and DoSpell("Земной шок") then return end
     
     if HasBuff("Волна лавы") then
-        if IsPlayerCasting(0.5) and not IsSpellInUse("Выброс лавы") then oexecute("SpellStopCasting()") end
+        if IsPlayerCasting(0.3) and not IsSpellInUse("Выброс лавы") then oexecute("SpellStopCasting()") end
         if DoSpell("Выброс лавы") then return end
     end
     if not HasMyDebuff("Огненный шок", 1,"target") then

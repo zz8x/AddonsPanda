@@ -517,10 +517,6 @@ end
 local checkHunter = false;
 function CheckTarget(useFocus , actualDistance)
 
-    if not IsPvP() and not IsValidTarget("target")  and UnitThreatSituation("player") == 3 then 
-        return 
-    end
-
     if not actualDistance then
         actualDistance = TargetActualDistance
     end

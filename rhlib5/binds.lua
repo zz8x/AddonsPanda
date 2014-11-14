@@ -33,6 +33,29 @@ function AutoRotationOff()
     echo("Авто ротация: OFF",true)
 end
 
+function IsPaused() 
+    if Paused then return true end
+    for i = 1, 72 do
+        local btn = _G["BT4Button"..i]
+        if btn ~= nil then
+            if btn:GetButtonState() == 'PUSHED' then 
+                TimerStart('Paused')
+                return true
+            end
+        else
+            break
+        end
+    end
+    local t = 0.3
+    local spell, _, _, _, _, endTime  = UnitCastingInfo("player")
+    if not spell then spell, _, _, _, _, endTime, _, nointerrupt = UnitChannelInfo("player") end
+    if spell and endTime then 
+        t = t + endTime/1000 - GetTime()
+    end
+    return TimerLess('Paused', t)
+end
+        
+
 ------------------------------------------------------------------------------------------------------------------
 function FaceToTarget(force)
     if not force and (IsMouselooking() or not PlayerInPlace()) then return end
@@ -160,7 +183,7 @@ function UpdateIdle(elapsed)
 
     if UpdateCommands() then return end
     
-    if Paused or UnitIsDeadOrGhost("player") then return end
+    if UnitIsDeadOrGhost("player") or IsPaused() then return end
 
     if IsFarm() then
         if CanAttack("target") then looted = false end
