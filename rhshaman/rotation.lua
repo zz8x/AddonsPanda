@@ -8,14 +8,14 @@ local peaceBuff = {"Пища", "Питье", "Призрачный волк"}
 
 function Idle()
 
-    if TimerLess('Control', 2) and IsReadySpell("Тотем трепета") then
+    if TimerLess('Control', 0.25) and IsReadySpell("Тотем трепета") then
         --chat("В контроле, можно снять тотемом")
-        local auras = InControl("player", 5)
-        if auras then 
-            chat("Тотем трепета " .. auras)
+        local auras = InControl("player",1)
+        --if auras then 
+            chat("Тотем трепета " .. (auras or "?"))
             DoSpell("Тотем трепета")
             return
-        end
+        --end
     end
 
     if not IsSpellNotUsed("Тотем трепета", 5) and DoSpell("Зов Стихий") then 
@@ -218,13 +218,16 @@ function TryHeal()
     local u = members[1]
     local h = UnitHealth100(u)
     local l = UnitLostHP(u)
+    
+    if h < 35 and DoSpell("Наставления предков") then return true end
+    if h < 45 and not HasTotem("Тотем целительного прилива") and DoSpell("Тотем целительного прилива") then  return true end
     if h < 80 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
-    if h < 70 and DoSpell("Наставления предков") then return true end
-    if h < 50 and not HasTotem(3) and DoSpell("Тотем целительного прилива") then return true end
-    if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and IsSpellNotUsed("Исцеляющий всплеск", 2) then
-        if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-        if h < (IsCtr() and 99 or 35) then DoSpell("Исцеляющий всплеск", u)  return true end
-        if h < 20 then return true end 
+    
+    
+    if not IsAttack() and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and IsSpellNotUsed("Исцеляющий всплеск", h > 25 and 3 or 1) then
+        --if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
+        if h < (IsCtr() and 99 or 40) then DoSpell("Исцеляющий всплеск", u)  return true end
+        --if h < 20 then return true end 
         TryDispel(u)
     end
     if IsSpellInUse("Исцеляющий всплеск") then return true end
@@ -241,7 +244,11 @@ function Rotation()
     
     if IsFarm() and InCombatLockdown() then
         if UnitMana100("player") < 60 and DoSpell("Гром и молния") then return end
-        if not HasTotem(1) and DoSpell("Тотем магмы") then return end
+        if IsAOE() then
+            if not HasTotem("Тотем магмы") and DoSpell("Тотем магмы") then return end
+        else
+            if not HasTotem("Опаляющий тотем") and (not HasTotem("Тотем магмы") and InMelee()) and DoSpell("Опаляющий тотем") then return end
+        end
         --if not HasTotem(2) and DoSpell("Тотем элементаля земли") then return end
     end
 
@@ -266,7 +273,7 @@ function Rotation()
     if HasMyDebuff("Огненный шок", 5,"target") and (select(4, HasBuff("Щит молний")) or 0) > 6 and DoSpell("Земной шок") then return end
     
     if HasBuff("Волна лавы") then
-        if IsPlayerCasting(0.3) and not IsSpellInUse("Выброс лавы") then oexecute("SpellStopCasting()") end
+        if IsPlayerCasting(0.3) and (not IsSpellInUse("Выброс лавы") or not IsSpellInUse("Удар духов стихии")) then oexecute("SpellStopCasting()") end
         if DoSpell("Выброс лавы") then return end
     end
     if not HasMyDebuff("Огненный шок", 1,"target") then
@@ -278,7 +285,7 @@ function Rotation()
         --if UseEquippedItem("Талисман стрел разума") then return end
         --if UseEquippedItem("Знак отличия Властелина Земли") then return end
         if DoSpell("Покорение стихий") then return end
-        if DoSpell("Удар духов стихии") then return end
+        if HasSpell("Удар духов стихии") and  DoSpell("Удар духов стихии") then return end
         if DoSpell("Высвободить чары стихий", "target") then return end
     end
 
@@ -287,7 +294,7 @@ function Rotation()
         if IsReadySpell("Выброс лавы") then return end
     end
     
-    if IsAOE() and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) then
+    if IsAOE() and UnitMana100("player") > 50 and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) then
         if  DoSpell("Цепная молния") then return end
     else
         if DoSpell("Молния") then return end    

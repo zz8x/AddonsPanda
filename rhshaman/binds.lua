@@ -72,16 +72,13 @@ function AutoAOEToggle()
     end 
 end
 
-
 function IsAOE()
-    if not IsShift() and UnitMana100("player") < 50 then return false end  
-    if AutoAOE and InViewEnemyCount() > 4 then return true end    
-   return IsShift()
-    or (AutoAOE and IsValidTarget("target") and IsValidTarget("focus") 
-        and not IsOneUnit("target", "focus") 
-        and UnitAffectingCombat("focus") and UnitAffectingCombat("target"))
-        
+    if IsShift() then return true end
+    if not AutoAOE then return false end
+    return IsValidTarget("target") and IsValidTarget("focus") and not IsOneUnit("target", "focus") 
+        and UnitAffectingCombat("focus") and UnitAffectingCombat("target")
 end
+
 ------------------------------------------------------------------------------------------------------------------
 local dispelSpell = "Очищение духа"
 local dispelTypes = {"Curse"}

@@ -194,7 +194,6 @@ local function UpdateIsCast(event, ...)
         local castInfo = getCastInfo(spell)
         if event == "UNIT_SPELLCAST_SUCCEEDED"
             and castInfo.StartTime and castInfo.StartTime > 0 then
-            print(spell)
             castInfo.LastCastTime = castInfo.StartTime 
         end
         if event == "UNIT_SPELLCAST_SENT" then

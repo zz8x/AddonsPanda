@@ -88,10 +88,23 @@ end
 if TrashList == nil then TrashList = {} end
 
 ------------------------------------------------------------------------------------------------------------------
-function IsTrash(n) --n - itemlink
+function IsTrash(n, minItemLevel) --n - itemlink
     if string.find(n, "ff9d9d9d") then return true end
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(n)
-    if tContains(TrashList, itemName)  then return true end
+    if Farm then
+      if sContains(itemName, "Эскиз:") or sContains(itemName, "ларец") or sContains(itemName, "сейф") then 
+        --print(n, " - Выкидываем эскизы, ларецы и сейфы в режиме фарма") 
+        return true 
+      end
+    end
+    if tContains(TrashList, itemName)  then
+      --print(itemName .. " - в списке хлама! ") 
+      return true 
+    end
+    if itemSellPrice > 0 and #itemEquipLoc > 0 and minItemLevel and itemLevel and itemLevel < minItemLevel then 
+      --print(n, " - низкий уровень предмета ", itemLevel, " min: " .. minItemLevel)
+      return true 
+    end
     return false
 end
 
@@ -110,33 +123,26 @@ function TrashToggle()
         tinsert(TrashList, itemName)
     end
 end
-------------------------------------------------------------------------------------------------------------------
-local autoLootTimeout = 2
-function TemporaryAutoLoot(t)
-    autoLootTimer = t or 2
-    if not TimerStarted("AutoLoot") then
-        chat("Автолут ON")
-        omacro("/console autoLootDefault 1")
 
+function TrashTest()
+    local itemName, ItemLink = GameTooltip:GetItem()
+    if nil == itemName then return end
+    local _, _, _, _, _, itemType, itemSubType, itemStackCount, itemEquipLoc, _, itemSellPrice = GetItemInfo(ItemLink)
+    print(itemName, itemType, itemSubType, itemEquipLoc, itemStackCount * itemSellPrice / 1000, "gold")
+    if itemSellPrice > 0 and #itemEquipLoc > 0 and ItemLevel then 
+        chat(itemName .. " - похоже на хлам! ")
     end
-    TimerStart("AutoLoot")
-end
-local function UpdateAutoLootTimer()
-    if TimerStarted("AutoLoot") and TimerMore("AutoLoot", autoLootTimer)  then
-        chat("Автолут OFF")
-        omacro("/console autoLootDefault 0")
-        TimerReset("AutoLoot")
+    if tContains(TrashList, itemName) then 
+        chat(itemName .. " - в списке хлама! ")
     end
 end
-AttachUpdate(UpdateAutoLootTimer, 0.5) 
-
 ------------------------------------------------------------------------------------------------------------------
 local useItemList = {}
 local function updateUseItemsFromList()
     if #useItemList < 1 then return end
     omacro("/use " .. tremove(useItemList, 1))
 end
-AttachUpdate(updateUseItemsFromList, 1.2)
+AttachUpdate(updateUseItemsFromList, 1.1)
 ------------------------------------------------------------------------------------------------------------------
 local function eachBagItems(func)
    for bag=0,NUM_BAG_SLOTS do
@@ -148,8 +154,20 @@ local function eachBagItems(func)
 end
 ------------------------------------------------------------------------------------------------------------------
 function SellGray()
+  local minItemLevel = nil
+  if Farm then
+    for i = 1, 18 do
+      local itemID = GetInventoryItemID("player",i)
+      if itemID then
+        local name, _, _, itemLevel, _, itemType = GetItemInfo(itemID) 
+        if itemType == "Доспехи" and (not minItemLevel or itemLevel < minItemLevel) then 
+          minItemLevel = itemLevel 
+        end
+      end
+    end
+  end
   eachBagItems(function(bag, slot, link)
-    if IsTrash(link) then                                 
+    if IsTrash(link, minItemLevel) then                                 
       tinsert(useItemList, bag .." " .. slot)                   
     end
   end)                                        
@@ -165,7 +183,7 @@ AttachEvent('MERCHANT_SHOW', SellGrayAndRepair)
 local function StopSell()
   wipe(useItemList)
 end
-AttachEvent('MERCHANT_CLOSED', SellGrayAndRepair)
+AttachEvent('MERCHANT_CLOSED', StopSell)
 ------------------------------------------------------------------------------------------------------------------
 function SellItem(name) 
     if not name then name = "" end

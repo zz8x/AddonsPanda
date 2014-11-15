@@ -510,6 +510,7 @@ function InCombatMode()
 end
 ------------------------------------------------------------------------------------------------------------------
 function TargetActualDistance(target)
+    if IsArena() then return true end
     if target == nil then target = "target" end
     return (CheckInteractDistance(target, 4) == 1)
 end
@@ -517,7 +518,7 @@ end
 local checkHunter = false;
 function CheckTarget(useFocus , actualDistance)
 
-    if not actualDistance then
+    if IsArena() or not actualDistance then
         actualDistance = TargetActualDistance
     end
     -- проверяем на 
@@ -587,14 +588,43 @@ function CheckTarget(useFocus , actualDistance)
             if UnitExists("focus") then oexecute("ClearFocus()") end
             for i = 1, #TARGETS do
                 local t = TARGETS[i]
-                if UnitAffectingCombat(t) and actualDistance(t) and not IsOneUnit("target", t) and (not IsPvP() or UnitIsPlayer(t)) then 
+                if IsValidTarget(t) and UnitAffectingCombat(t) and actualDistance(t) and not IsOneUnit("target", t) and (not IsPvP() or UnitIsPlayer(t)) then 
                     oexecute('FocusUnit("'.. t .. '")')
                     break
                 end
             end
         end
+
+        if not IsArena() and not IsValidTarget("focus") and TimerMore("Focus", 2) then
+            local cnt = InViewEnemyCount()
+
+            if cnt > 2 then
+                if UnitExists("focus") then oexecute("ClearFocus()") end
+
+                oexecute('FocusUnit("target")')
+                TimerStart("Focus")
+                for i = 1, cnt do
+
+                    if IsPvP() then 
+                        oexecute("TargetNearestEnemyPlayer()") 
+                    else
+                        oexecute("TargetNearestEnemy()") 
+                    end
+
+                    if not IsOneUnit("target", "focus") and IsValidTarget("target") and UnitAffectingCombat("target") and actualDistance("target") then
+                        break
+                    end
+                end
+                oexecute('TargetUnit("focus")')
+                oexecute("TargetLastTarget()")
+                oexecute('FocusUnit("target")')
+                oexecute("TargetLastTarget()")
+            end
+
+        end
+  
         
-        if not IsValidTarget("focus") or IsOneUnit("target", "focus") or (not IsArena() and not actualDistance("focus")) then
+        if not IsValidTarget("focus") or IsOneUnit("target", "focus") or not actualDistance("focus") then
             if UnitExists("focus") then oexecute("ClearFocus()") end
         end
     end

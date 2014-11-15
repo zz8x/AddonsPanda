@@ -131,8 +131,12 @@ function FarmToggle()
     Farm = not Farm
     if Farm then
         echo("Режим фарма: ON",true)
+        chat("Автолут ON")
+        omacro("/console autoLootDefault 1")
     else
         echo("Режим фарма: OFF",true)
+        chat("Автолут OFF")
+        omacro("/console autoLootDefault 0")
     end 
 end
 
@@ -179,6 +183,12 @@ function UpdateIdle(elapsed)
         echo("Требуется магичеcкое действие!!!", true) 
         return 
     end
+
+    if StaticPopup1Button2:IsVisible() == 1 and StaticPopup1Button2:IsEnabled() == 1 and StaticPopup1Button2:GetText() == "Пропустить" then
+       chat(StaticPopup1.text:GetText())
+       StaticPopup1Button2:Click()
+    end
+
     if IsBattleground() and UnitIsDead("player") and not UnitIsGhost("player") then oexecute("RepopMe()") end
 
     if UpdateCommands() then return end
@@ -194,7 +204,6 @@ function UpdateIdle(elapsed)
             end 
 
             if UnitExists("target") and not UnitIsPlayer("target") and UnitIsDead("target") then
-                TemporaryAutoLoot(2)
                 oexecute('InteractUnit("target")')
                 looted = true
             end    
@@ -255,14 +264,6 @@ function UpdateIdle(elapsed)
 
     if Idle then Idle() end
 end
-------------------------------------------------------------------------------------------------------------------
-local function UpdateMacroAlertHider()
-    if StaticPopup1Button2:IsVisible() == 1 and StaticPopup1Button2:IsEnabled() == 1 and StaticPopup1Button2:GetText() == "Пропустить" then
-       chat(StaticPopup1.text:GetText())
-       StaticPopup1Button2:Click()
-    end
-end
-AttachUpdate(UpdateMacroAlertHider)
 ------------------------------------------------------------------------------------------------------------------
 function GetFalingTime()
     if IsFalling() then

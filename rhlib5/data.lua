@@ -50,7 +50,7 @@ function InControl(target, last, collectTooltips)
     for i = 1, 40 do
         local name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitDebuff(target, i)
         if not name then break end
-        if expirationTime == 0 or expirationTime - GetTime() >= last and SpellsRedList[spellId] == "CC" then
+        if (expirationTime == 0 or expirationTime - GetTime() >= last) and SpellsRedList[spellId] == "CC" then
             if collectTooltips == nil then 
                 return name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId 
             end
