@@ -59,7 +59,7 @@ end
 ------------------------------------------------------------------------------------------------------------------
 function FaceToTarget(force)
     if not force and (IsMouselooking() or not PlayerInPlace()) then return end
-    if TimerMore("FaceToTarget", 0.2) and IsValidTarget("target") and (force or not PlayerFacingTarget("target")) then
+    if TimerMore("FaceToTarget", 1) and IsValidTarget("target") and (force or not PlayerFacingTarget("target")) then
         TimerStart("FaceToTarget")
         oface("target")
     end
@@ -72,7 +72,7 @@ local function updateFaceTotTarget(event, ...)
       amount, overkill, school, resisted, blocked, absorbed, critical, glancing, crushing = ...
       
     if type:match("SPELL_CAST_FAILED") and sourceGUID == UnitGUID("player") 
-        and (amount == "Цель должна быть перед вами." or amount == "Цель должна быть перед вами.") then
+        and (amount == "Цель должна быть перед вами." or amount == "Цель вне поля зрения.") then
         FaceToTarget()
     end
 end
@@ -209,7 +209,7 @@ function UpdateIdle(elapsed)
             end    
         end
 
-        if LootFrame:IsVisible() then CloseLoot()  end
+        --if LootFrame:IsVisible() then CloseLoot()  end
     else
         if not IsAttack() and LootFrame:IsVisible() then return end
     end

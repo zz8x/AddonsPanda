@@ -85,56 +85,69 @@ function TimerMore(name, less)
   return TimerElapsed(name) > (less or 0)
 end
 ------------------------------------------------------------------------------------------------------------------
-if TrashList == nil then TrashList = {} end
-
+if ExcludeItemsList == nil then ExcludeItemsList = {} end
 ------------------------------------------------------------------------------------------------------------------
-function IsTrash(n, minItemLevel) --n - itemlink
-    if string.find(n, "ff9d9d9d") then return true end
+
+function GetMinEquippedItemLevel()
+local minItemLevel = nil
+  if Farm then
+    for i = 1, 18 do
+      local itemID = GetInventoryItemID("player",i)
+      if itemID then
+        local name, _, _, itemLevel, _, itemType = GetItemInfo(itemID) 
+        if itemType == "Доспехи" and (not minItemLevel or itemLevel < minItemLevel) then 
+          minItemLevel = itemLevel 
+        end
+      end
+    end
+  end
+  return minItemLevel
+end
+------------------------------------------------------------------------------------------------------------------
+local function IsTrash(n, minItemLevel)
     local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemTexture, itemSellPrice = GetItemInfo(n)
+    local excuded = ExcludeItemsList[itemName]
+    if excuded ~= nil then return excuded end
+    if string.find(n, "ff9d9d9d") then return true end
     if Farm then
       if sContains(itemName, "Эскиз:") or sContains(itemName, "ларец") or sContains(itemName, "сейф") then 
-        --print(n, " - Выкидываем эскизы, ларецы и сейфы в режиме фарма") 
+        print(n, " - Выкидываем эскизы, ларецы и сейфы в режиме фарма") 
         return true 
       end
     end
-    if tContains(TrashList, itemName)  then
-      --print(itemName .. " - в списке хлама! ") 
-      return true 
-    end
-    if itemSellPrice > 0 and #itemEquipLoc > 0 and minItemLevel and itemLevel and itemLevel < minItemLevel then 
-      --print(n, " - низкий уровень предмета ", itemLevel, " min: " .. minItemLevel)
+    if minItemLevel and itemSellPrice > 0 and #itemEquipLoc > 0 and itemLevel and itemLevel < minItemLevel and not (itemType == "Оружие" and itemSubType == "Разное") then 
+      print(n, " - низкий уровень предмета ", itemLevel, " min: " .. minItemLevel)
       return true 
     end
     return false
 end
 
+function TrashInfo(itemName, ItemLink)
+    if nil == itemName then return end
+    local status = ExcludeItemsList[itemName]
+    local info = (status == nil and "Авто" or ("Список"))
+    chat(itemName .. " - это " .. (IsTrash(ItemLink, GetMinEquippedItemLevel()) and "хлам! " or "полезный предмет! ") .. "(" .. info .. ")" )
+end
+
 function TrashToggle()
     local itemName, ItemLink = GameTooltip:GetItem()
     if nil == itemName then return end
-    if tContains(TrashList, itemName) then 
-        for i=1, #TrashList do
-            if TrashList[i] ==  itemName then 
-                tremove(TrashList, i)
-                chat(itemName .. " - это полезный предмет! ")
-            end
-        end            
+    local status = ExcludeItemsList[itemName]
+    if status == nil then
+      status = true
+    elseif status then
+      status = false
     else
-        chat(itemName .. " - это хлам! ")
-        tinsert(TrashList, itemName)
+      status = nil
     end
+    ExcludeItemsList[itemName] = status
+    TrashInfo(itemName, ItemLink)
 end
 
 function TrashTest()
     local itemName, ItemLink = GameTooltip:GetItem()
-    if nil == itemName then return end
-    local _, _, _, _, _, itemType, itemSubType, itemStackCount, itemEquipLoc, _, itemSellPrice = GetItemInfo(ItemLink)
-    print(itemName, itemType, itemSubType, itemEquipLoc, itemStackCount * itemSellPrice / 1000, "gold")
-    if itemSellPrice > 0 and #itemEquipLoc > 0 and ItemLevel then 
-        chat(itemName .. " - похоже на хлам! ")
-    end
-    if tContains(TrashList, itemName) then 
-        chat(itemName .. " - в списке хлама! ")
-    end
+    print(GetItemInfo(ItemLink))
+    TrashInfo(itemName, ItemLink)
 end
 ------------------------------------------------------------------------------------------------------------------
 local useItemList = {}
@@ -154,18 +167,7 @@ local function eachBagItems(func)
 end
 ------------------------------------------------------------------------------------------------------------------
 function SellGray()
-  local minItemLevel = nil
-  if Farm then
-    for i = 1, 18 do
-      local itemID = GetInventoryItemID("player",i)
-      if itemID then
-        local name, _, _, itemLevel, _, itemType = GetItemInfo(itemID) 
-        if itemType == "Доспехи" and (not minItemLevel or itemLevel < minItemLevel) then 
-          minItemLevel = itemLevel 
-        end
-      end
-    end
-  end
+  local minItemLevel = GetMinEquippedItemLevel()
   eachBagItems(function(bag, slot, link)
     if IsTrash(link, minItemLevel) then                                 
       tinsert(useItemList, bag .." " .. slot)                   

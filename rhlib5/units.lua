@@ -564,12 +564,37 @@ function CheckTarget(useFocus , actualDistance)
 
         if tryTarget then
             TimerStart('TargetUnit')
+            
+
             if CanAttack("focus") and (not IsPvP() or UnitIsPlayer("focus")) then 
                 oexecute('TargetUnit("focus")') 
-            elseif IsPvP() then 
-                oexecute("TargetNearestEnemyPlayer()") 
             else
-                oexecute("TargetNearestEnemy()") 
+                oexecute('ClearFocus()')
+                local cnt = InViewEnemyCount()
+                if cnt < 1 then cnt = 1 end
+                local dist = 100
+                if cnt > 0 then
+                    for i = 1, cnt do
+                        if IsPvP() then 
+                            oexecute("TargetNearestEnemyPlayer()") 
+                        else
+                            oexecute("TargetNearestEnemy()") 
+                        end
+                        if CanAttack("target") and UnitAffectingCombat("target") and  (IsAttack() or UnitAffectingCombat("target")) then
+                            local d = CheckDistance("player", "target")
+                            --print(d)
+                            if d < dist then
+                                dist = d
+                                oexecute('TargetUnit("focus")')
+                                break
+                            end
+                        end
+                    end
+                    if UnitExists("focus") then 
+                        oexecute('TargetUnit("focus")') 
+                        oexecute('ClearFocus()')
+                    end
+                end
             end
             if not IsAttack()  -- если в авторежиме
                 and UnitExists("target") 
@@ -595,10 +620,10 @@ function CheckTarget(useFocus , actualDistance)
             end
         end
 
-        if not IsArena() and not IsValidTarget("focus") and TimerMore("Focus", 2) then
+        if not IsValidTarget("focus") and TimerMore("Focus", 2) then
             local cnt = InViewEnemyCount()
 
-            if cnt > 2 then
+            if cnt > 1 then
                 if UnitExists("focus") then oexecute("ClearFocus()") end
 
                 oexecute('FocusUnit("target")')
@@ -621,6 +646,10 @@ function CheckTarget(useFocus , actualDistance)
                 oexecute("TargetLastTarget()")
             end
 
+            if not IsValidTarget("focus") or IsOneUnit("target", "focus") or not actualDistance("focus") or not UnitAffectingCombat("focus") then
+                if UnitExists("focus") then oexecute("ClearFocus()") end
+            end
+
         end
   
         
@@ -629,12 +658,7 @@ function CheckTarget(useFocus , actualDistance)
         end
     end
 
-    if IsArena() then
-        if IsValidTarget("target") and (not UnitExists("focus") or IsOneUnit("target", "focus")) then
-            if IsOneUnit("target","arena1") and IsValidTarget("arena2") then oexecute('FocusUnit("arena2")') end
-            if IsOneUnit("target","arena2") and IsValidTarget("arena1") then oexecute('FocusUnit("arena1")') end
-        end
-    end
+    
 end
 ------------------------------------------------------------------------------------------------------------------
 local freedomSlots = {13, 14}

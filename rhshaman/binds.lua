@@ -35,7 +35,7 @@ local function interruptTarget(target, canStopCasting)
             end
         end
 
-        if not HasTotem("Тотем заземления") and (channel or t < 0.8) and IsReadySpell("Пронизывающий ветер") and InRange("Пронизывающий ветер", target) then
+        if not HasTotem("Тотем заземления") and (channel or t < 0.8) and IsReadySpell("Пронизывающий ветер", true) and InRange("Пронизывающий ветер", target) then
             if canStopCasting then oexecute("SpellStopCasting()") end
             if DoSpell("Пронизывающий ветер", target) then
                 echo("Пронизывающий ветер"..m)

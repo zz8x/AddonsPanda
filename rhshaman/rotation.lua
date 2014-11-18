@@ -148,6 +148,8 @@ function HealRotation()
 
     if TryDispelControl(members) then return end
 
+    if IsAlt() and h > 40 and TrySteal("target") then return end
+
     if IsAttack() and h > 60 then
         if not IsInteractUnit("target") then CheckTarget() end
         if not IsNotAttack("target") and CanAttack("target") then 
@@ -224,9 +226,9 @@ function TryHeal()
     if h < 80 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
     
     
-    if not IsAttack() and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and IsSpellNotUsed("Исцеляющий всплеск", h > 25 and 3 or 1) then
+    if (IsCtr() or not IsAttack()) and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and (IsCtr() or IsSpellNotUsed("Исцеляющий всплеск", h > 25 and 3 or 1)) then
         --if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-        if h < (IsCtr() and 99 or 40) then DoSpell("Исцеляющий всплеск", u)  return true end
+        if h < (IsCtr() and 99 or (IsPvP() and 70 or 40)) then DoSpell("Исцеляющий всплеск", u)  return true end
         --if h < 20 then return true end 
         TryDispel(u)
     end
@@ -273,13 +275,13 @@ function Rotation()
     if HasMyDebuff("Огненный шок", 5,"target") and (select(4, HasBuff("Щит молний")) or 0) > 6 and DoSpell("Земной шок") then return end
     
     if HasBuff("Волна лавы") then
-        if IsPlayerCasting(0.3) and (not IsSpellInUse("Выброс лавы") or not IsSpellInUse("Удар духов стихии")) then oexecute("SpellStopCasting()") end
-        if DoSpell("Выброс лавы") then return end
+        if IsPlayerCasting(0.3) and IsSpellInUse("Молния") then oexecute("SpellStopCasting()") end
+        DoSpell("Выброс лавы")
+        return
     end
-    if not HasMyDebuff("Огненный шок", 1,"target") then
-          if DoSpell("Огненный шок") then return end
-          if IsReadySpell("Огненный шок") then return end
-    end
+
+
+    if not HasMyDebuff("Огненный шок", 1,"target") and DoSpell("Огненный шок") then return end
 
     if InCombatLockdown() then
         --if UseEquippedItem("Талисман стрел разума") then return end
@@ -289,15 +291,21 @@ function Rotation()
         if DoSpell("Высвободить чары стихий", "target") then return end
     end
 
-    if UnitMana100("player") > 30 and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target")  then
-        if DoSpell("Выброс лавы") then return end
-        if IsReadySpell("Выброс лавы") then return end
+    if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) then
+
+        if HasBuff("Перерождение") and IsAOE() then
+            DoSpell("Цепная молния")  
+            return 
+        end
+
+        if HasMyDebuff("Огненный шок", 1.5,"target") and DoSpell("Выброс лавы") then return end
+
+        if IsAOE() and UnitMana100("player") > 50 and DoSpell("Цепная молния") then return end
+
+        if HasBuff("Перерождение") then return end
+            
     end
-    
-    if IsAOE() and UnitMana100("player") > 50 and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) then
-        if  DoSpell("Цепная молния") then return end
-    else
-        if DoSpell("Молния") then return end    
-    end 
+
+    if DoSpell("Молния") then return end
     
 end
