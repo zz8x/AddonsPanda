@@ -167,9 +167,9 @@ function UseMount(mountName)
     if IsPlayerCasting() then return false end
     if InGCD() then return false end
     if IsMounted()then return false end
-    if Debug then
+    --[[if Debug then
         print(mountName)
-    end
+    end]]
     omacro("/use "..mountName)
     return true
 end

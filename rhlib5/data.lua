@@ -45,7 +45,7 @@ end
 local tooltipCollection = {}
 local tooltip
 function InControl(target, last, collectTooltips) 
-    tooltip = GetTooltip()
+    tooltip = GetUtilityTooltips()
     wipe(tooltipCollection)
     for i = 1, 40 do
         local name, rank, icon, count, debuffType, duration, expirationTime, unitCaster, isStealable, shouldConsolidate, spellId  = UnitDebuff(target, i)

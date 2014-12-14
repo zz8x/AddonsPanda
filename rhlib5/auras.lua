@@ -5,31 +5,6 @@ local UnitBuff = UnitBuff
 local UnitDebuff = UnitDebuff
 local GetTime = GetTime
 ------------------------------------------------------------------------------------------------------------------
-local tooltip
-function GetTooltip()
-     if tooltip == nil then
-        tooltip = CreateFrame("GameTooltip", "hiddenTooltip")
-        tooltip:SetOwner(UIParent, "ANCHOR_NONE")
-        tooltip.left = {}
-        tooltip.right = {}
-        -- Most of the tooltip lines share the same text widget,
-        -- But we need to query the third one for cooldown info
-        for i = 1, 30 do
-            tooltip.left[i] = tooltip:CreateFontString()
-            tooltip.left[i]:SetFontObject(GameFontNormal)
-            if i < 5 then
-                tooltip.right[i] = tooltip:CreateFontString()
-                tooltip.right[i]:SetFontObject(GameFontNormal)
-                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[i])
-            else
-                tooltip:AddFontStrings(tooltip.left[i], tooltip.right[4])
-            end
-        end 
-    end
-    tooltip:ClearLines()
-    return tooltip
-end
-------------------------------------------------------------------------------------------------------------------
 -- Универсальный внутренний метод, для работы с бафами и дебафами
 -- HasAura('auraName' or {'aura1', ...}, minExpiresTime(s), 'target' or {'target', 'focus', ...}, UnitDebuff or UnitBuff or UnitAura, bool AuraCaster = player)
 function HasAura(aura, last, target, method, my)
@@ -89,19 +64,72 @@ end
 ------------------------------------------------------------------------------------------------------------------
 -- using: HasTemporaryEnchant(16 or 17)
 --/run print(GetTemporaryEnchant(16))
-function GetTemporaryEnchant(slot)
-    local enchantTooltip = GetTooltip()
-    enchantTooltip:SetInventoryItem("player", slot)
-    local nLines = enchantTooltip:NumLines()
-    for i = 1, nLines do
-        local txt = enchantTooltip.left[i]
-        if ( txt:GetTextColor() == 0 ) then
-            local line = txt:GetText()  
-            local paren = line:find("[(]")
-            if ( paren ) then
-                line = line:sub(1,paren-2)
-                return line
+
+------------------------------------------------------------------------------------------------------------------
+function GetUtilityTooltips()
+    if ( not utility_Tooltip1 ) then
+        for idxTip = 1,2 do
+            local ttname = "utility_Tooltip"..idxTip
+            local tt = CreateFrame("GameTooltip", ttname)
+            tt:SetOwner(UIParent, "ANCHOR_NONE")
+            tt.left = {}
+            tt.right = {}
+            -- Most of the tooltip lines share the same text widget,
+            -- But we need to query the third one for cooldown info
+            for i = 1, 30 do
+                tt.left[i] = tt:CreateFontString()
+                tt.left[i]:SetFontObject(GameFontNormal)
+                if i < 5 then
+                    tt.right[i] = tt:CreateFontString()
+                    tt.right[i]:SetFontObject(GameFontNormal)
+                    tt:AddFontStrings(tt.left[i], tt.right[i])
+                else
+                    tt:AddFontStrings(tt.left[i], tt.right[4])
+                end
+            end 
+         end
+    end
+    local tt1,tt2 = utility_Tooltip1, utility_Tooltip2
+    tt1:ClearLines()
+    tt2:ClearLines()
+    return tt1,tt2
+end
+
+function GetTemporaryEnchant(i_invID)
+    local tt1,tt2 = GetUtilityTooltips()
+    
+    tt1:SetInventoryItem("player", i_invID)
+    local n,h = tt1:GetItem()
+
+    tt2:SetHyperlink(h)
+    
+    -- Look for green lines present in tt1 that are missing from tt2
+    local nLines1, nLines2 = tt1:NumLines(), tt2:NumLines()
+    local i1, i2 = 1,1
+    while ( i1 <= nLines1 ) do
+        local txt1 = tt1.left[i1]
+        if ( txt1:GetTextColor() ~= 0 ) then
+            i1 = i1 + 1
+        elseif ( i2 <= nLines2 ) then
+            local txt2 = tt2.left[i2]
+            if ( txt2:GetTextColor() ~= 0 ) then
+                i2 = i2 + 1
+            elseif (txt1:GetText() == txt2:GetText()) then
+                i1 = i1 + 1
+                i2 = i2 + 1
+            else
+                break
             end
+        else
+            break
         end
     end
+    if ( i1 <= nLines1 ) then
+        local line = tt1.left[i1]:GetText()
+        local paren = line:find("[(]")
+        if ( paren ) then
+            line = line:sub(1,paren-2)
+        end
+        return line
+    end    
 end

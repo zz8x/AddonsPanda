@@ -1,5 +1,18 @@
 ﻿-- Shaman Rotation Helper by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
+local flyMounts = {
+    "Ракета на обедненном кипарии",
+    "Геосинхронный вращатель мира",
+    "Непобедимый",
+    "Песчаниковый дракон",
+}
+local groundMounts = {
+    "Ракета на обедненном кипарии",
+    "Геосинхронный вращатель мира",
+    "Непобедимый",
+    "Анжинерский чоппер",
+    "Большой як для путешествий"
+}
 SetCommand("mount", 
     function() 
         --[[if not IsArena() then
@@ -24,7 +37,7 @@ SetCommand("mount",
 
         if InGCD() or IsPlayerCasting() then return end
 
-        if IsSwimming() and not HasBuff("Хождение по воде", 1, "player") and DoSpell("Хождение по воде", "player") then 
+        if IsFalling() and GetFalingTime() < 1 and DoSpell("Хождение по воде", "player") then 
             TimerStart('Mount')
             return true
         end
@@ -40,9 +53,13 @@ SetCommand("mount",
             return true
         end
 
-        --local mount = (IsShift() or IsBattleground() or IsArena()) and "Стремительный гнедой рысак" or "Вороной грифон"--"Камнешкурый дракон"--"Ветролет" 
-        local mount = "Непобедимый"--"Золотистый грифон"
-        --if IsAlt() then mount = "Тундровый мамонт путешественника" end
+        --local mount = "Ракета на обедненном кипарии"
+        local mount = (IsShift() or IsBattleground() or not IsFlyableArea()) and groundMounts[random(#groundMounts)] or flyMounts[random(#flyMounts)]
+        ----"Непобедимый"--"Золотистый грифон"
+        if IsAlt() then mount = "Большой як для путешествий" end --"Тундровый мамонт путешественника"
+        if IsSwimming() then
+            mount = "Подчиненный морской конек"
+        end
         if UseMount(mount) then 
             TimerStart('Mount')
             return true

@@ -4,7 +4,7 @@
 ## Version: 5.0
 ## DefaultState: Disabled
 ## LoadOnDemand: 1
-## SavedVariables: HarmfulCastingSpell, ExcludeItemsList, FriendList
+## SavedVariables: HarmfulCastingSpell, ExcludeItemsList, FriendList, MapPoints
 ## SavedVariablesPerCharacter: Paused, Debug, Farm, SpellsAmounts, SpellsAmount
 lib.lua
 misc.lua

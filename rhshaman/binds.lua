@@ -72,11 +72,25 @@ function AutoAOEToggle()
     end 
 end
 
-function IsAOE()
+local cnt = 0
+function IsAOE(n)
     if IsShift() then return true end
     if not AutoAOE then return false end
-    return IsValidTarget("target") and IsValidTarget("focus") and not IsOneUnit("target", "focus") 
-        and UnitAffectingCombat("focus") and UnitAffectingCombat("target")
+    if not n then n = 1 end
+    if cnt < 1 or TimerMore('IsAOE', 2) then
+        TimerStart('IsAOE')
+        cnt = InViewEnemyCount(true)
+        local t = IsValidTarget("target") and UnitAffectingCombat("target")
+        local f =  IsValidTarget("focus") and UnitAffectingCombat("focus") and (not t or not IsOneUnit("target", "focus"))
+        if t and f and cnt < 2 then 
+            cnt = 2 
+        else
+            if (t or f) and cnt < 1 then 
+                cnt = 1 
+            end
+        end
+    end
+    return cnt > n
 end
 
 ------------------------------------------------------------------------------------------------------------------

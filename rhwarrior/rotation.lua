@@ -18,8 +18,8 @@ function Idle()
     end]]
 
 	if InCombatMode() then
-        CheckTarget()
-        TryProtect()
+        if CheckTarget() then return end
+        if TryProtect() then return end
         Rotation()
         return
     end
@@ -27,10 +27,10 @@ end
 
 function TryProtect()
     local hp = UnitHealth100("player")
-    if IsPvP() and hp < 60 and DoSpell("Оборонительная стойка") then return end
-    if hp < 50 and DoSpell("Бой насмерть") then return end
-    if hp < 30 and DoSpell("Глухая оборона") then return end
-    if HasBuff("Глухая оборона") and DoSpell("Ободряющий клич") then return end
+    if IsPvP() and hp < 60 and DoSpell("Оборонительная стойка") then return true end
+    if hp < 50 and DoSpell("Бой насмерть") then return true end
+    if hp < 30 and DoSpell("Глухая оборона") then return true end
+    if HasBuff("Глухая оборона") and DoSpell("Ободряющий клич") then return true end
     return false
 end
 

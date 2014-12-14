@@ -472,14 +472,31 @@ function InDistance(unit1,unit2, distance)
 end
 
 ------------------------------------------------------------------------------------------------------------------
-function InViewEnemyCount() 
+local function getUnitCombatStatus(r, g, b) return (r > .5 and g < .5) end
+function InViewEnemyCount(combat) 
     local count = 0 
-    local frames = {WorldFrame:GetChildren()} 
-    for _, frame in pairs(frames) do 
-        if frame:GetName() and frame:IsShown() and frame:GetName():find('NamePlate%d') then 
-            count = count + 1
-        end 
-    end 
+    curChildren = select('#', WorldFrame:GetChildren())
+    if numChildren ~= curChildren then
+        local i, frame
+        for i = 1, curChildren do
+            frame = select(i, WorldFrame:GetChildren())
+            if frame:GetName() and frame:IsShown() and frame:GetName():find('NamePlate%d') then
+                if combat then
+                    local _, namegroup = frame:GetChildren()
+                    if namegroup then
+                        local name = namegroup:GetRegions()
+                        local isInCombat = getUnitCombatStatus(name:GetTextColor())
+                        --print(name:GetText(), isInCombat)
+                        if isInCombat then
+                            count = count + 1
+                        end
+                    end
+                else
+                    count = count + 1
+                end
+            end
+        end
+    end
     return count 
 end
 ------------------------------------------------------------------------------------------------------------------
@@ -499,13 +516,6 @@ function InCombatMode()
     if InCombatLockdown() then TimerStart('CombatLock') end
     if IsAttack() then return true end
     if TimerLess('CombatLock', 1) and TimerLess('CombatTarget', 3) then return true end
-    --[[if IsFarm() then
-        local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
-        if myHP > 60 and myMana > 60  then  
-            if TimerMore('Attack', 1) then TryAttack() end
-            return true  
-        end
-    end]]
     return false
 end
 ------------------------------------------------------------------------------------------------------------------
@@ -515,150 +525,46 @@ function TargetActualDistance(target)
     return (CheckInteractDistance(target, 4) == 1)
 end
 ------------------------------------------------------------------------------------------------------------------
-local checkHunter = false;
-function CheckTarget(useFocus , actualDistance)
+LastTarget = false
+hooksecurefunc("ClearTarget", function()
+    LastTarget = false
+end)
 
-    if IsArena() or not actualDistance then
-        actualDistance = TargetActualDistance
-    end
-    -- проверяем на 
-    if IsValidTarget("target") then
-       checkHunter = UnitIsPlayer("target") and ("HUNTER" == GetClass("target"))
-    else
-        if checkHunter then
-            oexecute("TargetLastTarget()")
-            if not CanAttack("target") then
-                checkHunter = false
-                if UnitExists("target") then oexecute("ClearTarget()") end   
-            else
-                chat("Перевыбрали ханта")
-                TryAttack() 
-            end
-        end
-    end
-
-    -- помощь в группе
-    if not IsValidTarget("target") and IsInGroup() then
-        -- если что-то не то есть в цели
-        if UnitExists("target") then oexecute("ClearTarget()") end
-
-        for i = 1, #TARGET do
-            local t = TARGET[i]
-            if t and (UnitAffectingCombat(t) or IsPvP()) and actualDistance(t) and (not IsPvP() or UnitIsPlayer(t))  then 
-                oexecute('TargetUnit("'.. t .. '")')
-                if CanAttack("target") then
-                    break
-                end
-            end
-        end
-    end
-    -- пытаемся выбрать ну хоть что нибудь
+function CheckTarget()
     if not IsValidTarget("target") then
-        -- если что-то не то есть в цели
-        local tryTarget = true
-        if UnitExists("target") then 
-            oexecute("ClearTarget()")
+        omacro('/cleartarget')
+        if IsValidTarget('focus') and UnitAffectingCombat("focus") then
+            omacro('/target focus')
+            omacro('/clearfocus')
         else
-            tryTarget = TimerMore('TargetUnit', 0.3)
-        end
-
-        if tryTarget then
-            TimerStart('TargetUnit')
-            
-
-            if CanAttack("focus") and (not IsPvP() or UnitIsPlayer("focus")) then 
-                oexecute('TargetUnit("focus")') 
+            if IsPvP() then
+                omacro('/targetenemyplayer')
             else
-                oexecute('ClearFocus()')
-                local cnt = InViewEnemyCount()
-                if cnt < 1 then cnt = 1 end
-                local dist = 100
-                if cnt > 0 then
-                    for i = 1, cnt do
-                        if IsPvP() then 
-                            oexecute("TargetNearestEnemyPlayer()") 
-                        else
-                            oexecute("TargetNearestEnemy()") 
-                        end
-                        if CanAttack("target") and UnitAffectingCombat("target") and  (IsAttack() or UnitAffectingCombat("target")) then
-                            local d = CheckDistance("player", "target")
-                            --print(d)
-                            if d < dist then
-                                dist = d
-                                oexecute('TargetUnit("focus")')
-                                break
-                            end
-                        end
-                    end
-                    if UnitExists("focus") then 
-                        oexecute('TargetUnit("focus")') 
-                        oexecute('ClearFocus()')
-                    end
-                end
-            end
-            if not IsAttack()  -- если в авторежиме
-                and UnitExists("target") 
-                and (not CanAttack("target")  -- вообще не цель
-                    or (not IsArena() and not actualDistance("target"))  -- далековато
-                    or (not IsPvP() and not UnitAffectingCombat("target")) -- моб не в бою
-                    or (IsPvP() and not UnitIsPlayer("target")) -- не игрок в пвп
-                )  then 
-                oexecute("ClearTarget()") 
+                omacro("/targetenemy [combat]")
+                wipe(execQueueList)
+                execQueueDelay = 0.1
+                tinsert(execQueueList, 'RunMacroText("/targetenemy [noexists]")')
+                return false
+            end    
+        end
+    else
+       LastTarget = true 
+    end
+
+    if IsValidTarget("target") and UnitAffectingCombat("target") and (not IsValidTarget("focus") or IsOneUnit("focus", "target") or not UnitAffectingCombat("focus"))  then
+        --if UnitExists("focus") then print(not IsValidTarget("focus") , IsOneUnit("focus", "target") , not UnitAffectingCombat("focus")) end
+        omacro('/clearfocus')
+        if InViewEnemyCount() > 1 and TimerMore("CheckTarget", 0.3) then
+            TimerStart("CheckTarget")
+            local guid = UnitGUID("target")
+            omacro(IsPvP() and '/targetenemyplayer' or '/targetenemy [combat]')
+            if guid ~= UnitGUID("target") then
+                if UnitAffectingCombat("target") then omacro('/focus target') end
+                omacro('/targetlasttarget')
             end
         end
     end
-
-    if useFocus ~= false then 
-        if not IsValidTarget("focus") then
-            if UnitExists("focus") then oexecute("ClearFocus()") end
-            for i = 1, #TARGETS do
-                local t = TARGETS[i]
-                if IsValidTarget(t) and UnitAffectingCombat(t) and actualDistance(t) and not IsOneUnit("target", t) and (not IsPvP() or UnitIsPlayer(t)) then 
-                    oexecute('FocusUnit("'.. t .. '")')
-                    break
-                end
-            end
-        end
-
-        if not IsValidTarget("focus") and TimerMore("Focus", 2) then
-            local cnt = InViewEnemyCount()
-
-            if cnt > 1 then
-                if UnitExists("focus") then oexecute("ClearFocus()") end
-
-                oexecute('FocusUnit("target")')
-                TimerStart("Focus")
-                for i = 1, cnt do
-
-                    if IsPvP() then 
-                        oexecute("TargetNearestEnemyPlayer()") 
-                    else
-                        oexecute("TargetNearestEnemy()") 
-                    end
-
-                    if not IsOneUnit("target", "focus") and IsValidTarget("target") and UnitAffectingCombat("target") and actualDistance("target") then
-                        break
-                    end
-                end
-                oexecute('TargetUnit("focus")')
-                oexecute("TargetLastTarget()")
-                oexecute('FocusUnit("target")')
-                oexecute("TargetLastTarget()")
-            end
-
-            if not IsValidTarget("focus") or IsOneUnit("target", "focus") or not actualDistance("focus") or not UnitAffectingCombat("focus") then
-                if UnitExists("focus") then oexecute("ClearFocus()") end
-            end
-
-        end
-  
-        
-        if not IsValidTarget("focus") or IsOneUnit("target", "focus") or not actualDistance("focus") then
-            if UnitExists("focus") then oexecute("ClearFocus()") end
-        end
-    end
-
-    
+    return false
 end
 ------------------------------------------------------------------------------------------------------------------
 local freedomSlots = {13, 14}

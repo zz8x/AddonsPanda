@@ -1,9 +1,6 @@
 -- Shaman Rotation Helper by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------
-local function actualDistance(target)
-    return InRange("Молния", target)
-end 
 local peaceBuff = {"Пища", "Питье", "Призрачный волк"}
 
 function Idle()
@@ -44,7 +41,7 @@ function Idle()
     end
 
 	if InCombatMode() then
-        CheckTarget(true, actualDistance)
+        if CheckTarget() then return end
         Rotation()
         return
     end
@@ -138,8 +135,8 @@ function HealRotation()
     
     if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
 
-    if h < (IsCtr() and 100 or 98) and DoSpell("Быстрина", u) then return end
-    if h < (IsCtr() and 100 or 98) and DoSpell("Высвободить чары стихий", u) then return end
+    if h < (IsCtr() and 100 or 90) and DoSpell("Быстрина", u) then return end
+    if h < (IsCtr() and 100 or 90) and DoSpell("Высвободить чары стихий", u) then return end
 
     local GreatHealingWaveHeal = GetSpellAmount("Великая волна исцеления", 12000) * 1.2
     local HealingWaveHeal = GetSpellAmount("Волна исцеления", 8000) * 1.2
@@ -151,7 +148,7 @@ function HealRotation()
     if IsAlt() and h > 40 and TrySteal("target") then return end
 
     if IsAttack() and h > 60 then
-        if not IsInteractUnit("target") then CheckTarget() end
+        if not IsInteractUnit("target") and CheckTarget() then return end
         if not IsNotAttack("target") and CanAttack("target") then 
             if not HasMyDebuff("Огненный шок", 1,"target") and  DoSpell("Огненный шок") then return end
             if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and HasMyDebuff("Огненный шок", 1.5,"target") and DoSpell("Выброс лавы") then return end
@@ -176,12 +173,12 @@ function HealRotation()
             end
         end
 
-        if myMana > 40 and (l > GreatHealingWaveHeal) and HasMyBuff("Приливные волны", 2.5, "player") then
+        if myMana > 40 and (l > GreatHealingWaveHeal * 1.25) and HasMyBuff("Приливные волны", 2.5, "player") then
             DoSpell("Великая волна исцеления", u)
             return
         end 
 
-        if (h < 50 or (l > HealingWaveHeal)) then
+        if (h < 50 or (l > HealingWaveHeal * 1.25)) then
             DoSpell("Волна исцеления", u)
             return
         end 
@@ -191,8 +188,8 @@ function HealRotation()
     if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
 
     if (h > 60 or not PlayerInPlace()) and myMana > 50 and (CanInterrupt or IsPvP()) then
-        if IsSpellNotUsed("Очищение духа", 10) and TryDispel(members) then return  end
-        if IsSpellNotUsed("Развеивание магии", 2) and TrySteal(ITARGETS) then return  end
+        if IsSpellNotUsed("Очищение духа", 20) and TryDispel(members) then return  end
+        if IsSpellNotUsed("Развеивание магии", 5) and TrySteal(ITARGETS) then return  end
     end
 
     if not IsAttack() and h > 50 and IsPvP() then
@@ -221,17 +218,19 @@ function TryHeal()
     local h = UnitHealth100(u)
     local l = UnitLostHP(u)
     
-    if h < 35 and DoSpell("Наставления предков") then return true end
-    if h < 45 and not HasTotem("Тотем целительного прилива") and DoSpell("Тотем целительного прилива") then  return true end
+    if h < 50 and DoSpell("Наставления предков") then return true end
+    if h < 55 and not HasTotem("Тотем целительного прилива") and DoSpell("Тотем целительного прилива") then  return true end
     if h < 80 and not HasTotem(3) and DoSpell("Тотем исцеляющего потока") then return true end
     
+    if h < 40 and not PlayerInPlace() then DoSpell("Благосклонность предков") end
     
-    if (IsCtr() or not IsAttack()) and (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and (IsCtr() or IsSpellNotUsed("Исцеляющий всплеск", h > 25 and 3 or 1)) then
+    if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and (IsCtr() or IsSpellNotUsed("Исцеляющий всплеск", h > 40 and 5 or 2)) then
         --if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-        if h < (IsCtr() and 99 or (IsPvP() and 70 or 40)) then DoSpell("Исцеляющий всплеск", u)  return true end
+        if h < (IsCtr() and 90 or (IsPvP() and 70 or 49)) then DoSpell("Исцеляющий всплеск", u)  return true end
+        if h < ((Farm and TimerMore('CombatTarget',1)) and 70 or 49) then DoSpell("Исцеляющий всплеск", u)  return true end
         --if h < 20 then return true end 
-        TryDispel(u)
     end
+    TryDispel(u)
     if IsSpellInUse("Исцеляющий всплеск") then return true end
     return false
 end
@@ -243,18 +242,7 @@ function Rotation()
     if GetInventoryItemID("player",16) and not sContains(GetTemporaryEnchant(16), "Язык пламени") and DoSpell("Оружие языка пламени") then return end
 
     if not HasBuff("Щит молний") and DoSpell("Щит молний") then return end
-    
-    if IsFarm() and InCombatLockdown() then
-        if UnitMana100("player") < 60 and DoSpell("Гром и молния") then return end
-        if IsAOE() then
-            if not HasTotem("Тотем магмы") and DoSpell("Тотем магмы") then return end
-        else
-            if not HasTotem("Опаляющий тотем") and (not HasTotem("Тотем магмы") and InMelee()) and DoSpell("Опаляющий тотем") then return end
-        end
-        --if not HasTotem(2) and DoSpell("Тотем элементаля земли") then return end
-    end
-
-
+   
     if IsNotAttack("target") then return end
 
     if not CanAttack() then return end
@@ -280,14 +268,45 @@ function Rotation()
         return
     end
 
+    if IsFarm() and IsAOE(3) and UnitMana100("player") > 40 and IsReadySpell("Землетрясение") then
+        DoSpell("Землетрясение", "player") 
+        return
+    end
 
-    if not HasMyDebuff("Огненный шок", 1,"target") and DoSpell("Огненный шок") then return end
+    if IsFarm() and InCombatLockdown() then
+        if UnitMana100("player") < 60 and DoSpell("Гром и молния") then return end
+        if IsAOE() then
+            if not HasTotem("Тотем магмы") and DoSpell("Тотем магмы") then return end
+        else
+            if not HasTotem("Опаляющий тотем") and (not HasTotem("Тотем магмы") and InMelee()) and DoSpell("Опаляющий тотем") then return end
+        end
+        
+        if CanAttack("target") and IsAOE() and UnitHealth100("player") < 85 then
+            if not HasTotem(3) and DoSpell("Тотем конденсации") then return end
+        end
+
+        if CanAttack("target") and UnitHealth100("player") < 30 then
+            if not HasTotem(2) and DoSpell("Тотем элементаля земли") then return end
+        end
+
+        if IsAOE(3) and UnitMana100("player") > 50 and CanAttack("target") and UnitHealth100("target") > 70 then
+            if not HasTotem(4) and DoSpell("Тотем порыва бури") then return end
+            if not HasDebuff("Изнеможение", 0.01, "player") then DoSpell("Героизм") end
+            DoSpell("Гром и молния")
+            if not IsReadySpell("Землетрясение") and not IsReadySpell("Удар духов стихии") then 
+                DoSpell("Перерождение") 
+            end
+        end
+    end
+
+
+    if  not IsAOE(2) and  not HasMyDebuff("Огненный шок", 1,"target") and DoSpell("Огненный шок") then return end
 
     if InCombatLockdown() then
         --if UseEquippedItem("Талисман стрел разума") then return end
         --if UseEquippedItem("Знак отличия Властелина Земли") then return end
         if DoSpell("Покорение стихий") then return end
-        if HasSpell("Удар духов стихии") and  DoSpell("Удар духов стихии") then return end
+        if not IsAOE(2) and HasSpell("Удар духов стихии") and  DoSpell("Удар духов стихии") then return end
         if DoSpell("Высвободить чары стихий", "target") then return end
     end
 
@@ -298,9 +317,11 @@ function Rotation()
             return 
         end
 
-        if HasMyDebuff("Огненный шок", 1.5,"target") and DoSpell("Выброс лавы") then return end
+        if  not IsAOE(2) and HasMyDebuff("Огненный шок", 1.5,"target") and DoSpell("Выброс лавы") then return end
 
-        if IsAOE() and UnitMana100("player") > 50 and DoSpell("Цепная молния") then return end
+        if IsAOE() then
+            if UnitMana100("player") > 30 and  DoSpell("Цепная молния") then return end
+        end
 
         if HasBuff("Перерождение") then return end
             
