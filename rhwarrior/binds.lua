@@ -22,7 +22,7 @@ local function interruptTarget(target, canStopCasting)
     if canStopCasting == nil then canStopCasting = IsPlayerCasting(0.5)  end
     local spell, t, channel, notinterrupt, m = GetKickInfo(target)
     if not spell then return false end
-    if not notinterrupt and not IsInterruptImmune(target) then
+    if not notinterrupt and not IsInterruptImmune(target) then -- вот тут мне мешают отразить спелы которые во время каста нельзя интерпатить
 
         if InMelee(target) and (channel or t < 0.8) and IsReadySpell("Зуботычина") then
             if canStopCasting then oexecute("SpellStopCasting()") end
