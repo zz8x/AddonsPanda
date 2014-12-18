@@ -2,7 +2,16 @@
 ------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------
 local peaceBuff = {"Пища", "Питье", "Призрачный волк"}
-
+local function CheckHexCast()
+    local spell = UnitCastingInfo("player")
+    if not spell or spell ~= "Сглаз" then return end
+    local target = GetLastSpellTarget(spell)
+    if not target then return end
+    if HasBuff("Отражение", 0.1, target) then 
+        chat('Отражение '.. spell .. ' ' .. target)
+        oexecute("SpellStopCasting()") 
+    end
+end
 function Idle()
 
     if TimerLess('Control', 0.25) and IsReadySpell("Тотем трепета") then
@@ -30,7 +39,7 @@ function Idle()
 
     -- дайте поесть (побегать) спокойно 
     if not IsAttack() and (IsMounted() or CanExitVehicle() or HasBuff(peaceBuff)) then return end
-
+    CheckHexCast()
     if HasSpell("Быстрина") then
         HealRotation()
         return
@@ -106,13 +115,13 @@ function HealRotation()
         local u = members[i]
         local h = UnitHealth100(u)
         if (select(4, HasMyBuff("Щит земли", 5, u)) or 0) > 1  then unitWithShield = u end
-        if (UnitThreatAlert(u) == 3) and (h < threatLowHP) and (not IsOneUnit(u, "player")) then
+        if (UnitThreatAlert(u) == 3) and (h < threatLowHP) and not IsOneUnit(u, "player") then
            threatLowHPUnit = u  
            threatLowHP = h 
         end
     end
 
-    if myHP < 40 then
+    if myHP < 40 and myMana > 30 then
        threatLowHP = myHP
        threatLowHPUnit = "player"  
     end
@@ -132,8 +141,10 @@ function HealRotation()
             return
         end
     end
-    
+
     if IsArena() and not InCombatLockdown() and not HasBuff("Водный щит") and not unitWithShield and DoSpell("Щит земли", "player") then return end
+
+     if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
 
     if h < (IsCtr() and 100 or 90) and DoSpell("Быстрина", u) then return end
     if h < (IsCtr() and 100 or 90) and DoSpell("Высвободить чары стихий", u) then return end
@@ -146,6 +157,15 @@ function HealRotation()
     if TryDispelControl(members) then return end
 
     if IsAlt() and h > 40 and TrySteal("target") then return end
+    if h > 50 then
+        if IsPvP() and not HasTotem("Опаляющий тотем") and (not HasTotem("Тотем магмы") and InMelee()) and DoSpell("Опаляющий тотем") then return end
+        if not IsAttack() and not IsNotAttack("target") and h > 50 and IsPvP() then
+            for i = 1, #ITARGETS do
+                local t = ITARGETS[i]
+                if CanControl(t) and UnitIsPlayer(t) and not HasDebuff("Ледяной шок", 0.1, t) and DoSpell("Ледяной шок", t) then return end
+            end
+        end
+    end
 
     if IsAttack() and h > 60 and not IsNotAttack("target") then
         if not IsInteractUnit("target") and CheckTarget() then return end
@@ -158,7 +178,7 @@ function HealRotation()
 
     if PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
                         
-        if h < 35 or (UnitMana100("player") > 50 and l > HealingSurge * 1.25 and HasMyBuff("Приливные волны", 1.5, "player"))  then
+        if h < 35 or (myMana > 50 and l > HealingSurge * 1.25 and HasMyBuff("Приливные волны", 1.5, "player"))  then
             DoSpell("Исцеляющий всплеск", u)
             return 
         end
@@ -185,19 +205,9 @@ function HealRotation()
   
     end
 
-    if not (HasBuff("Водный щит") or HasBuff("Щит земли")) and DoSpell("Водный щит") then return end
-
     if (h > 60 or not PlayerInPlace()) and myMana > 50 and (CanInterrupt or IsPvP()) then
         if IsSpellNotUsed("Очищение духа", 20) and TryDispel(members) then return  end
         if IsSpellNotUsed("Развеивание магии", 5) and TrySteal(ITARGETS) then return  end
-    end
-
-    if IsPvP() and not HasTotem("Опаляющий тотем") and (not HasTotem("Тотем магмы") and InMelee()) and DoSpell("Опаляющий тотем") then return end
-    if not IsAttack() and not IsNotAttack("target") and h > 50 and IsPvP() then
-        for i = 1, #ITARGETS do
-            local t = ITARGETS[i]
-            if CanControl(t) and UnitIsPlayer(t) and not HasDebuff("Ледяной шок", 0.1, t) and DoSpell("Ледяной шок", t) then return end
-        end
     end
 
     if not IsArena() and IsReadyItem("Кристалл безумия") and not HasBuff("Предвестник безумия") then UseItem("Кристалл безумия") end
