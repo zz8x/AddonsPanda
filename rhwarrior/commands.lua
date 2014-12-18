@@ -14,7 +14,7 @@ SetCommand("stun",
 ------------------------------------------------------------------------------------------------------------------
 SetCommand("blink", 
     function() 
-        if DoSpell("Героический прыжок", false) then
+        if DoSpell("Героический прыжок", IsAlt()) then
             echo("Героический прыжок!", 1)
         end
     end, 
@@ -116,9 +116,10 @@ end
     end
 
     if TimerMore('Jump', 3) then
-        if IsReadySpell("Охрана") and IsReadySpell(flag) then
+        local name = UnitExists("target") and UnitName("target") or ""
+        if IsReadySpell("Охрана") and (name == flag or IsReadySpell(flag)) then
             TimerStart('Jump')
-            chat("JumpStart "..target.."!")
+            chat("JumpStart !")
             return false
         end
         chat("JumpFail!")
@@ -130,7 +131,14 @@ end
 )
 
 function JumpCommand()
-    local flag = IsReadySpell("Издевательское знамя")  and  "Издевательское знамя" or "Деморализующее знамя"
+    local flag
+    local name = UnitExists("target") and UnitName("target") or ""
+    if sContains(name, "знамя") then 
+        chat("JumpStart ".. name .. "!")
+        flag = name
+    else
+        flag = IsReadySpell("Издевательское знамя")  and  "Издевательское знамя" or "Деморализующее знамя"    
+    end
     DoCommand("jump", flag)
 end
 ------------------------------------------------------------------------------------------------------------------
