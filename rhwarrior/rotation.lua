@@ -54,7 +54,7 @@ function Rotation()
     if IsCtr() then
         if DoSpell("Безрассудство") then return end
         if DoSpell("Знамя с черепом") then return end
-        if UseItem("Жетон победы бездушного гладиатора") then return end
+        if UseItem("Жетон победы гордого гладиатора") then return end
         if HasSpell("Вихрь клинков") and DoSpell("Вихрь клинков") then return end
         if HasSpell("Ударная волна") and DoSpell("Ударная волна") then return end
         return
