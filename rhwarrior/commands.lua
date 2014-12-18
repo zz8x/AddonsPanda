@@ -1,6 +1,5 @@
 ﻿-- Warrior Rotation Helper by Timofeev Alexey
 -- Команда на установку флага и чардж к нему
--- Правки к команде на чардж к енемитаргету, не ставить флаг если цель вне зоны охраны(подбега)
 ------------------------------------------------------------------------------------------------------------------
 SetCommand("stun", 
     function(target) 
@@ -64,6 +63,10 @@ SetCommand("fear",
 )
 
 function DefCommand()
+    if IsAlt() then
+        JumpCommand()
+        return
+    end
     local target = "target"
     if not IsInteractUnit(target) then
         target = GetTeammate()
@@ -79,7 +82,58 @@ function DefCommand()
     DoCommand("def", target)
 end 
 ------------------------------------------------------------------------------------------------------------------
+ SetCommand("jump", 
+  function(flag)
 
+    if IsReadySpell(flag) then
+        chat("Jump "..flag.."!")
+        DoSpell(flag, true)
+        return
+    end
+
+    local name = UnitName("target")
+    if name ~= flag then
+        chat("Jump выбор знамени!")
+        omacro("/target "..flag)
+        return
+    end
+ 
+    if IsReadySpell("Охрана") then
+        chat("Jump Охрана!")
+        DoSpell("Охрана", "target")
+        return
+    else
+        chat("Jump возврат цели!")
+        oexecute('TargetLastTarget()') 
+        TimerStart('JumpSucces')   
+    end
+
+  end, 
+  function(flag) 
+    if TimerLess('JumpSucces', 1) then 
+        chat("JumpSucces!")
+        return true 
+    end
+
+    if TimerMore('Jump', 3) then
+        if IsReadySpell("Охрана") and IsReadySpell(flag) then
+            TimerStart('Jump')
+            chat("JumpStart "..target.."!")
+            return false
+        end
+        chat("JumpFail!")
+        return true
+    end
+
+    return false 
+  end
+)
+
+function JumpCommand()
+    local flag = IsReadySpell("Издевательское знамя")  and  "Издевательское знамя" or "Деморализующее знамя"
+    DoCommand("jump", flag)
+end
+------------------------------------------------------------------------------------------------------------------
  SetCommand("unroot", 
   function(flag, target)
 
@@ -115,9 +169,12 @@ end
 
     if TimerMore('UnRoot', 3) then
         if IsReadySpell("Охрана") and InRange("Охрана", target) and IsReadySpell(flag) then
-            TimerStart('UnRoot')
-            chat("UnRootStart "..target.."!")
-            return false
+            local d = CheckDistance("player", target) or 100
+            if d < 22 then
+                TimerStart('UnRoot')
+                chat("UnRootStart "..target.."!")
+                return false
+            end
         end
         chat("UnRootFail!")
         return true

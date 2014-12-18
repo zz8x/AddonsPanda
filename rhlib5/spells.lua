@@ -344,10 +344,11 @@ function UseSpell(spellName, target)
         return false 
     end
     local manual = target == false;
-    if manual then target = nil end
+    local auto = target == true;
+    if manual or auto then target = nil end
     if target == nil then target = IsHarmfulSpell(spellName) and "target" or "player" end
     if dump then print("Пытаемся прожать", spellName, "на", target) end
-    if SpellIsTargeting() then 
+    if SpellIsTargeting() then
         -- Не мешаем выбрать область для спела (нажат вручную)
         if dump then print("Ждем выбор цели, не можем прожать", spellName) end
         if TimerStarted('Manual') and TimerMore('Manual', 3) then oexecute('SpellStopTargeting()') end
@@ -417,8 +418,22 @@ function UseSpell(spellName, target)
         if manual then
             TimerStart('Manual')
         else
-            oclick(target)
-            oexecute('SpellStopTargeting()')
+            if auto then
+                 local look = IsMouselooking()
+                if look then
+                    oexecute('TurnOrActionStop()')
+                end
+                oexecute('CameraOrSelectOrMoveStart()')
+                oexecute('CameraOrSelectOrMoveStop()')
+                if look then
+                    oexecute('TurnOrActionStart()')
+                end
+                oexecute('SpellStopTargeting()')
+            else
+                oclick(target)
+                oexecute('SpellStopTargeting()')    
+            end
+            
         end
     end
 
