@@ -176,23 +176,6 @@ local function compareTargets(t1,t2) return targetWeights[t1] < targetWeights[t2
 local waterWalkingBuffs = {"Хождение по воде", "Льдистый путь"}
 FastUpdate = false
 ------------------------------------------------------------------------------------------------------------------
-local AntiFarmCDTime = 10 * 60
-local recedCD = true
-local looted = 0
-local farmPrefix = "A - Farm "
-local farmVendorName = "Франк"
-local farmVendor = farmPrefix .. "Vendor"
-local farmEnter = farmPrefix .. "Enter"
-local farmExit = farmPrefix .. "Exit"
-farmCurrentIdx = nil
-FarmPointMaxTime = 60
-FarmAuto = false
-local farmRotate = false
-local needMana = false
-local money = nil
-local farmPriorityMobs = {"Разрыватель"}--,  "Опустошитель"}
-local farmLastGuid = nil
-------------------------------------------------------------------------------------------------------------------
 function UpdateIdle(elapsed)
     
     if nil == oexecute then 
@@ -207,38 +190,11 @@ function UpdateIdle(elapsed)
    
     if Farm and UnitIsDeadOrGhost("player") then
         oexecute('AcceptResurrect()')
-        farmCurrentIdx = 1
     end
 
-    if UnitIsDead("player") and not UnitIsGhost("player") and (Farm or IsBattleground()) and CheckMapPoint(oinfo("player")) then 
-        AddMapPoint('LastDeath')
+    if UnitIsDead("player") and not UnitIsGhost("player") and IsBattleground() then 
         oexecute("RepopMe()")  
-        TimerStart('Death')
         return             
-    end
-
-    if Farm and TimerMore('Death', 10) and UnitIsGhost("player") and CheckMapPoint(oinfo("player")) then 
-        local p = GetMapPoint('LastDeath')
-        if p then
-            c = GetCurrentMapContinent()
-            if c and c ~= -1 and p.c == c then
-                if not CheckMapPoint(p.x, p.y, p.z) then 
-                    chat('teleport to LastDeath')
-                    TimerStart('Death')
-                    TeleportTo(p) 
-                end
-                return
-            end
-            if FarmAuto then 
-                chat('teleport to farmEnter')
-                TimerStart('Death')
-                TeleportToPoint(farmEnter) 
-                return
-            end
-            chat('teleport to Corpse')
-            TimerStart('Death')
-            TeleportToCorpse()
-        end
     end
 
     if UpdateCommands() then return end
@@ -246,14 +202,6 @@ function UpdateIdle(elapsed)
     if UnitIsDeadOrGhost("player") or InExecQueue() or IsPaused() then return end
 
     if Farm then
-        if GetFalingTime() > 5 then
-            if farmLastGuid then
-                omacro('/cleartarget')
-                TimerReset('FarmToTarget')
-                farmLastGuid = nil
-            end
-            TeleportToLastPos()
-        end
 
         -- ждем LootFrame
         if TimerLess("Loot", 1.2) then 
@@ -267,299 +215,23 @@ function UpdateIdle(elapsed)
 
         if LootFrame:IsVisible() then CloseLoot() end
 
-        if farmLastGuid and TimerLess('FarmToTarget', 5) then
-            if not InMapPoint('LastTarget') then
-                --chat('телепорт к трупу')
-                TeleportToPoint('LastTarget')
-                return                    
-            end
-            if ResetMapPoint('LastTarget') or IsFalling() then 
-                --chat('ResetMapPoint у трупа')
-                return 
-            end
-            if not UnitExists("target") or UnitGUID("target") ~= farmLastGuid then
-                --chat('Выбираем последний труп')
-                oexecute('TargetLastTarget()')
-            end
-        else
-            if not UnitExists("target") and TimerLess('CombatTarget', 2) and LastTarget then
-                --chat('Выбираем труп')
-                oexecute('TargetLastTarget()')
-            end
+        if not UnitExists("target") and TimerLess('CombatTarget', 2) and LastTarget then
+            --chat('Выбираем труп')
+            oexecute('TargetLastTarget()')
         end
+
         if UnitExists("target") and not UnitIsPlayer("target") and UnitIsDead("target") then
-            if FarmAuto and not InMelee("target") and IsVisible("target") then
-                if TimerLess('FarmToTarget', 5) then 
-                    --chat('farmLastGuid not InMelee')
-                    return 
-                end
-                farmLastGuid = UnitGUID("target")
-                TimerStart('FarmToTarget')
-                --chat('start FarmToTarget')
-                --print("Надо бы к трупу поближе")
-                TeleportToTarget('target')
-                return
-            end
-            TimerReset('FarmToTarget')
-            farmLastGuid = nil
             --chat('Лутаем')
             oexecute('InteractUnit("target")')
             TimerStart("Loot")
-            TimerReset("FarmPoint")
             return
         end
-
-        if TimerStarted('FarmToTarget') then
-            if TimerLess('FarmToTarget', 5) then return end
-            --chat('end FarmToTarget')
-            TimerReset('FarmToTarget')
-            farmLastGuid = nil
-            omacro('/cleartarget')
-        end
-
     end
 
     if LootFrame:IsVisible() then
         if IsAttack() then  CloseLoot() end 
         return
     end
-
-    if IsFarm() and TimerMore('AFK', 60 * 5) and not HasBuff("Пища") and not HasBuff("Питье") and not IsPlayerCasting() then
-        TimerStart('AFK')
-        AntiAFK()
-    end
-
-    ------------------------------------------------------------------------------------------------------------------
-    ------------------------------------------------------------------------------------------------------------------
-    ------------------------------------------------------------------------------------------------------------------
-    ------------------------------------------------------------------------------------------------------------------
-    if TimerStarted('AntiFarmCD') then
-        if InMapPoint(farmVendor) then
-            ResetMapPoint(farmVendor)
-        else
-            TeleportToPoint(farmVendor)
-        end
-
-        echo('AntiFarmCD ' ..  SecondsToTime(AntiFarmCDTime - TimerElapsed('AntiFarmCD')),1)
-        if TimerMore('AntiFarmCD', AntiFarmCDTime) then
-            TimerReset('AntiFarmCD')
-            farmTryCount = 0
-        end
-    end
-    ------------------------------------------------------------------------------------------------------------------
-    if Farm and FarmAuto and not TimerStarted('AntiFarmCD') then
-
-        if  farmPoint ~= farmExit and not money then
-            money = GetMoney()
-            TimerStart('Money')
-        end
-
-        if HasBuff("Питье") and UnitMana100("player") < 100 then
-            needMana = false
-            return 
-        end
-
-        if UnitMana100("player") > 99 then
-            needMana = false
-        end
-
-        if TimerStarted('Enter') and TimerMore('Enter', 3) then
-            TimerStart('AntiFarmCD')
-            TimerReset('Enter')
-            return
-        end
-
-        if InMapPoint(farmEnter) then
-            if not TimerStarted('Enter') then TimerStart('Enter') end
-        else
-            TimerReset('Enter')
-        end
-
-        local inInstance, instanceType = IsInInstance()
-        if inInstance ~= nil and instanceType ~= "raid" then
-            inInstance = nil
-        end
-
-        if inInstance ~= nil then
-
-            if TimerMore('View', 10) then
-                oexecute('SetView(1)')
-                TimerStart('View')
-            end
-
-            if farmCurrentIdx == nil then
-                farmCurrentIdx = 1
-                local i = 1
-                while i < 100 do
-                    local p = GetMapPoint(farmPrefix .. i)
-                    if not p then break end
-                    if CheckMapPoint(p.x, p.y, p.z) then
-                        farmCurrentIdx = i
-                        break
-                    end
-                    i = i + 1
-                end
-            end
-
-            if farmRotate then 
-                oexecute("TurnRightStop()")
-                farmRotate = false
-            end
-
-            if needMana then
-                 UseItem("Газированная оазисная вода") 
-                 return
-            end
-
-
-            if IsAOE() and TimerMore('farmPriorityMobs', 1) and IsValidTarget("target") then
-                TimerStart('farmPriorityMobs')
-                local name = UnitName("target")
-                local guid = UnitGUID("target")
-                local try = true
-                for i = 1, #farmPriorityMobs do
-                    local mob = farmPriorityMobs[i]
-                    if sContains(name, mob) then
-                        try = false
-                        break
-                    end
-                end
-
-                if try then
-                    for i = 1, #farmPriorityMobs do
-                        local mob = farmPriorityMobs[i]
-                        omacro("/tar " .. mob)
-                        if IsValidTarget("target") and InMelee("target") then  
-                            break
-                        else
-                           if guid ~= UnitGUID("target") then omacro('/targetlasttarget') end
-                        end
-                    end
-                end
-            end
-
-            if CheckTarget() then return end
-
-            farmPoint = farmPrefix .. farmCurrentIdx
-            if not GetMapPoint(farmPoint) then 
-                if money then
-                    money = GetMoney() - money
-                    chat(("Итого: %s, за %s"):format(GetCoinText(money) , SecondsToTime(TimerElapsed('Money'))), 1, 0 , 0.5);
-                    money = nil
-                    TimerReset('Money')
-                end
-                farmPoint = farmExit 
-            end
-            
-            if not farmRotate and PlayerInPlace() and not IsPlayerCasting()
-                and TimerStarted("NoTarget") and TimerMore("NoTarget",1) then 
-                oexecute("TurnRightStart()")
-                farmRotate = true
-            end
-
-            if not InMapPoint(farmPoint) then
-                TimerReset("NoTarget")
-                TeleportToPoint(farmPoint) 
-                TimerReset("FarmPoint")
-                return
-            else
-                if ResetMapPoint(farmPoint) or IsPlayerCasting() then
-                    TimerReset("NoTarget")
-                    if not InCombatLockdown() then return end
-                end
-                if not TimerStarted("FarmPoint") then TimerStart("FarmPoint") end
-            end
-
-            if not InCombatMode() then TryAttack() end
-
-            if not UnitExists("target") or (oinfo('target') and InDistance("player", "target", 40.1)) then
-                if TimerStarted('FarTarget') then TimerReset('FarTarget') end
-            else
-                if not TimerStarted('FarTarget') then TimerStart('FarTarget') end
-            end
-            if TimerStarted('FarTarget')  and TimerMore('FarTarget', 5)  then
-                omacro('/cleartarget') 
-            end
-
-            if UnitExists("target") then
-                FaceToTarget()
-            end
-
-            if CanAttack("target") then 
-                
-                TimerReset("NoTarget")
-                recedCD = true
-            else
-                if UnitExists('target') then chat(CanAttackInfo) end
-                if not TimerStarted("NoTarget") then TimerStart("NoTarget") end
-                oexecute('ClearTarget()') 
-            end
-
-            if TimerStarted("FarmPoint") and TimerLess("FarmPoint", FarmPointMaxTime) then
-                echo('<' .. farmPoint .. '> ' ..  SecondsToTime(TimerElapsed('FarmPoint')),1)
-            end
-            
-            if farmPoint ~= farmExit and InMapPoint(farmPoint) then
-                local needNext = false
-                if TimerStarted("NoTarget") and TimerMore("NoTarget", 2.5) then
-                    --chat(farmPoint .. " - Долго без цели")
-                    needNext = true
-                end
-                if TimerStarted("FarmPoint") and TimerMore("FarmPoint",FarmPointMaxTime) then
-                    --chat(farmPoint .. " - Долго на точке")
-                    needNext = true
-                end
-                if needNext then
-                    if not InCombatLockdown() and UnitMana100("player") < 51 and not HasBuff("Питье") and GetItemCount("Газированная оазисная вода") > 0 then 
-                        --print('Пополним ману')
-                        needMana = true
-                        return
-                    end
-                    farmCurrentIdx = farmCurrentIdx + 1
-                    TimerReset("NoTarget")
-                    TimerReset("FarmPoint")
-
-                end
-            end
-        else
-            farmCurrentIdx = 1
-            if GetFreeBagSlotCount() < 15 then
-                if InMapPoint(farmVendor) then
-                    ResetMapPoint(farmVendor)
-                    if UnitExists("target") then
-                        local unitName = UnitName("target")
-                        if sContains(unitName, farmVendorName) then
-                            oexecute('InteractUnit("target")')
-                        else
-                            oexecute('ClearTarget()')
-                        end
-                    else
-                        OpenContainers()
-                        if InExecQueue() then return end
-                        omacro('/tar '..farmVendorName)
-                    end
-                else    
-                    TeleportToPoint(farmVendor)
-                end
-            else
-                if recedCD then
-                    recedCD = false
-                    SetRaidDifficultyID(5)
-                    SetRaidDifficultyID(3)
-                    TimerStart("RaidCD")
-                end
-                if TimerStarted("RaidCD") and TimerLess("RaidCD", 3) then return end
-                TimerStart("Wait")
-                TeleportToPoint(farmEnter)
-            end
-        end
-
-    end
-    ------------------------------------------------------------------------------------------------------------------
-    ------------------------------------------------------------------------------------------------------------------
-    ------------------------------------------------------------------------------------------------------------------
-    ------------------------------------------------------------------------------------------------------------------
-
 
     if IsMouse(3) and UnitExists("mouseover") and not IsOneUnit("target", "mouseover") then 
         oexecute('FocusUnit("mouseover")')
