@@ -1,12 +1,16 @@
 ﻿-- Shaman Rotation Helper by Timofeev Alexey
 ------------------------------------------------------------------------------------------------------------------
 local flyMounts = {
+    "Драгоценная ониксовая пантера",
     "Ракета на обедненном кипарии",
     "Геосинхронный вращатель мира",
     "Непобедимый",
     "Песчаниковый дракон",
+    "Золотистый грифон",
 }
 local groundMounts = {
+    "Золотистый грифон",
+    "Драгоценная ониксовая пантера",
     "Ракета на обедненном кипарии",
     "Геосинхронный вращатель мира",
     "Непобедимый",
@@ -54,7 +58,8 @@ SetCommand("mount",
         end
 
         --local mount = "Ракета на обедненном кипарии"
-        local mount = (IsShift() or IsBattleground() or not IsFlyableArea()) and groundMounts[random(#groundMounts)] or flyMounts[random(#flyMounts)]
+        local mount = "Драгоценная ониксовая пантера"
+        --local mount = (IsShift() or IsBattleground() or not IsFlyableArea()) and groundMounts[random(#groundMounts)] or flyMounts[random(#flyMounts)]
         ----"Непобедимый"--"Золотистый грифон"
         if IsAlt() then mount = "Большой як для путешествий" end --"Тундровый мамонт путешественника"
         if IsSwimming() then
