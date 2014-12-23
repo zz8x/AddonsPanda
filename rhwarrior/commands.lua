@@ -1,8 +1,4 @@
 ﻿-- Warrior Rotation Helper by Timofeev Alexey
--- Команда на фулбурст, ниже написанное надо скопом прожать одной командой        
---[[if DoSpell("Безрассудство") then return end
-if DoSpell("Знамя с черепом") then return end
-if UseItem("Жетон победы гордого гладиатора") then return end]]
 ------------------------------------------------------------------------------------------------------------------
 SetCommand("stun", 
     function(target) 
@@ -12,6 +8,16 @@ SetCommand("stun",
     end, 
     function(target) 
         return not CanControl(target) or HasDebuff("Удар громовержца", 0,1, target) or not IsSpellNotUsed("Удар громовержца", 1) 
+    end
+)
+------------------------------------------------------------------------------------------------------------------
+SetCommand("sw", 
+    function() 
+        if HasSpell("Вихрь клинков") and DoSpell("Вихрь клинков") then end
+        if HasSpell("Ударная волна") and DoSpell("Ударная волна") then end
+    end, 
+    function()
+        return not IsSpellNotUsed("Ударная волна", 1) or HasBuff("Вихрь клинков") 
     end
 )
 ------------------------------------------------------------------------------------------------------------------
