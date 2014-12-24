@@ -121,7 +121,7 @@ function HealRotation()
         end
     end
 
-    if myHP < 40 and myMana > 30 then
+    if myHP < 40 and myMana > 40 then
        threatLowHP = myHP
        threatLowHPUnit = "player"  
     end
@@ -178,7 +178,7 @@ function HealRotation()
 
     if PlayerInPlace() or HasBuff("Благосклонность предков", 1) then
                         
-        if h < 35 or (myMana > 50 and l > HealingSurge * 1.25 and HasMyBuff("Приливные волны", 1.5, "player"))  then
+        if (h < 35 or (myMana > 70 and l > HealingSurge * 1.25)) and HasMyBuff("Приливные волны", 1.5, "player")  then
             DoSpell("Исцеляющий всплеск", u)
             return 
         end
@@ -214,7 +214,6 @@ function HealRotation()
 end
 
 function TryHeal()
-
     if InCombatLockdown() and IsValidTarget("target") then
         local hp = UnitHealth100("player")
        
@@ -239,7 +238,7 @@ function TryHeal()
     
     if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and (IsCtr() or IsSpellNotUsed("Исцеляющий всплеск", h > 40 and 5 or 2)) then
         --if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
-        if h < (IsCtr() and 90 or (IsPvP() and 70 or 49)) then DoSpell("Исцеляющий всплеск", u)  return true end
+        if not IsAttack() and h < (IsCtr() and 90 or (IsPvP() and 70 or 49)) then DoSpell("Исцеляющий всплеск", u)  return true end
         --if h < 20 then return true end 
     end
     TryDispel(u)
