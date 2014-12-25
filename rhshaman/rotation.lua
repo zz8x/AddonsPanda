@@ -210,7 +210,7 @@ function HealRotation()
         if IsSpellNotUsed("Развеивание магии", 5) and TrySteal(ITARGETS) then return  end
     end
 
-    if not IsArena() and IsReadyItem("Кристалл безумия") and not HasBuff("Предвестник безумия") then UseItem("Кристалл безумия") end
+    if not IsArena() and IsReadyItem("Кристалл безумия") and not HasBuff("Предвестник безумия") and not HasBuff("настой") then UseItem("Кристалл безумия") end
 end
 
 function TryHeal()
@@ -309,5 +309,5 @@ function Rotation()
 
     if DoSpell("Молния") then return end
 
-    if not IsArena() and IsReadyItem("Кристалл безумия") and not HasBuff("Предвестник безумия") then UseItem("Кристалл безумия") end
+    if not IsArena() and IsReadyItem("Кристалл безумия") and not HasBuff("Предвестник безумия") and not HasBuff("настой") then UseItem("Кристалл безумия") end
 end
