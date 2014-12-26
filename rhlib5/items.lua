@@ -74,9 +74,13 @@ end
 
 function UseItem(itemName, count)
     if IsPlayerCasting() then return false end
+    if not ItemExists(itemName) then return false end
     if not IsEquippedItem(itemName) and not IsUsableItem(itemName) then return false end
+    if IsCurrentItem(itemName) then return false end
     if not IsReadyItem(itemName) then return false end
     if not IsReadyItem(itemName, true) then return true end
+    local itemSpell = GetItemSpell(itemName)
+    if itemSpell and IsSpellInUse(itemSpell) then return false end
     if not count then count = 1 end
     for i = 1, count do
         omacro("/use " .. itemName)
@@ -88,10 +92,6 @@ function UseItem(itemName, count)
 end
 ------------------------------------------------------------------------------------------------------------------
 function UseEquippedItem(item)
-    if ItemExists(item) and IsReadyItem(item) then
-        local itemSpell = GetItemSpell(item)
-        if itemSpell and IsSpellInUse(itemSpell) then return false end
-    end 
     if IsEquippedItem(item) and UseItem(item) then return true end
     return false
 end
