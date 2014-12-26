@@ -99,6 +99,7 @@ end
 ------------------------------------------------------------------------------------------------------------------
 local potions = { 
     "Камень здоровья",
+    "Лечебное зелье мастера",
 	"Легендарное лечебное зелье",
 	"Рунический флакон с лечебным зельем"--[[,
 	"Бездонный флакон с лечебным зельем",
@@ -106,7 +107,7 @@ local potions = {
 }
 function UseHealPotion()
     for i = 1, #potions do 
-		if UseItem(potions[i], 5) then return true end
+		if UseItem(potions[i], 3) then return true end
 	end
     return false
 end

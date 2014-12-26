@@ -73,6 +73,8 @@ function HealRotation()
     local h = UnitHealth100(u)
     local l = UnitLostHP(u)
 
+
+
     if HasBuff("Стремительность предков") then
         DoSpell("Великая волна исцеления", u)
         chat("Мгновенно Великая волна исцеления " .. UnitName(u))
@@ -82,7 +84,12 @@ function HealRotation()
     if TryInterrupt(TARGETS, h > 40) then return end
 
     local myHP, myMana =  UnitHealth100("player"), UnitMana100("player")
+
     if InCombatLockdown() then
+        if not (IsArena() or InDuel()) then
+            if myHP < 35 then UseHealPotion() end
+        end
+
         if PlayerInPlace() and not HasTotem(3) then
             if myMana < 50 and IsReadySpell("Тотем прилива маны") then
                  DoSpell("Тотем прилива маны") 

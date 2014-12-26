@@ -61,7 +61,7 @@ SetCommand("mount",
         local mount = "Драгоценная ониксовая пантера"
         --local mount = (IsShift() or IsBattleground() or not IsFlyableArea()) and groundMounts[random(#groundMounts)] or flyMounts[random(#flyMounts)]
         ----"Непобедимый"--"Золотистый грифон"
-        if IsAlt() then mount = "Большой як для путешествий" end --"Тундровый мамонт путешественника"
+        if IsAlt() then mount = "Тундровый мамонт путешественника" end --"Большой як для путешествий"
         if IsSwimming() then
             mount = "Подчиненный морской конек"
         end
