@@ -11,6 +11,18 @@ SetCommand("stun",
     end
 )
 ------------------------------------------------------------------------------------------------------------------
+SetCommand("msl", 
+    function(target) 
+        if DoSpell("Пронзительный вой", target) then
+            echo("Пронзительный вой", 1)
+        end
+    end, 
+    function(target) 
+        return not CanControl(target) or HasDebuff("Пронзительный вой", 0,1, target) or not IsSpellNotUsed("Пронзительный вой", 1) 
+    end
+)
+------------------------------------------------------------------------------------------------------------------
+
 SetCommand("sw", 
     function() 
         if HasSpell("Вихрь клинков") and DoSpell("Вихрь клинков") then end
