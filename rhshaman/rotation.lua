@@ -268,9 +268,7 @@ function Rotation()
 
     if not IsArena() and IsReadyItem("Кристалл безумия") and not HasBuff("Предвестник безумия") and not HasBuff("настой") then UseItem("Кристалл безумия") end
 
-    if IsFarm() then
-        if GetItemCount("Барабаны забытых королей") > 0 and not HasBuff("Благословение забытых королей") and UseItem("Барабаны забытых королей") then return end
-    end
+    --if GetItemCount("Барабаны забытых королей") > 0 and not HasBuff("Благословение забытых королей") and UseItem("Барабаны забытых королей") then return end
 
     if not HasBuff("Щит молний") and DoSpell("Щит молний") then return end
    
@@ -300,37 +298,6 @@ function Rotation()
         DoSpell("Выброс лавы")
         return
     end
-
-    if IsFarm() and IsAOE(4) and UnitMana100("player") > 40  and IsReadySpell("Землетрясение") then
-        DoSpell("Землетрясение", "player") 
-        return
-    end
-
-    if IsFarm() and InCombatLockdown() then
-        if UnitMana100("player") < 80 and UseEquippedItem("Сосуд с кровью и гноем") then return end
-        if UnitMana100("player") < (IsAOE(4) and 95 or 60) and DoSpell("Гром и молния") then return end
-        if IsAOE() then
-            if not HasTotem("Тотем магмы") and DoSpell("Тотем магмы") then return end
-        else
-            if not HasTotem("Опаляющий тотем") and (not HasTotem("Тотем магмы") and InMelee()) and DoSpell("Опаляющий тотем") then return end
-        end
-        
-        --[[if CanAttack("target") and IsAOE() and UnitHealth100("player") < 85 then
-            if not HasTotem(3) and DoSpell("Тотем конденсации") then return end
-        end]]
-
-        --[[if CanAttack("target") and UnitHealth100("player") < 30 then
-            if not HasTotem(2) and DoSpell("Тотем элементаля земли") then return end
-        end]]
-
-        if IsAOE(3) and UnitMana100("player") > 50 and CanAttack("target") and UnitHealth100("target") > 50 then
-            if not HasTotem(4) and DoSpell("Тотем порыва бури") then return end
-            if not HasDebuff("Изнеможение", 0.01, "player") then DoSpell("Героизм") end
-            if GetItemCount("Барабаны ярости") > 0 and not HasBuff("Барабаны ярости") and UseItem("Барабаны ярости") then return end
-            DoSpell("Перерождение") 
-        end
-    end
-
 
     if not IsAOE(2) and  not HasMyDebuff("Огненный шок", 1,"target") and DoSpell("Огненный шок") then return end
 
