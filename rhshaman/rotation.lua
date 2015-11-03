@@ -8,8 +8,7 @@ local function CheckHexCast()
     local target = GetLastSpellTarget(spell)
     if not target then return end
     if HasBuff("Отражение", 0.1, target) then 
-        chat('Отражение '.. spell .. ' ' .. target)
-        oexecute("SpellStopCasting()") 
+        StopCast("Отражение")
     end
 end
 function Idle()
@@ -61,8 +60,7 @@ local function CheckCast()
     local target = GetLastSpellTarget(spell)
     if not target then return end
     if not InRange(spell, target) then 
-        chat('Stop '.. spell .. ' ' .. target)
-        oexecute("SpellStopCasting()") 
+        StopCast("!InRange")
     end
 end
 function HealRotation()
@@ -250,7 +248,7 @@ function TryHeal()
     if h < 40 and not PlayerInPlace() then DoSpell("Благосклонность предков") end
     
     if (PlayerInPlace() or HasBuff("Благосклонность предков", 1)) and (IsCtr() or IsSpellNotUsed("Исцеляющий всплеск", h > 40 and 5 or 2)) then
-        --if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then oexecute("SpellStopCasting()") end
+        --if h < 20 and IsPlayerCasting() and not IsSpellInUse("Исцеляющий всплеск") then StopCast("Исцеляющий всплеск") end
         if not IsAttack() and h < (IsCtr() and 90 or (IsPvP() and 70 or 49)) then DoSpell("Исцеляющий всплеск", u)  return true end
         if h < ((Farm and TimerMore('CombatTarget',1)) and 70 or 49) then DoSpell("Исцеляющий всплеск", u)  return true end
         --if h < 20 then return true end 
@@ -278,23 +276,21 @@ function Rotation()
 
     if IsSpellNotUsed("Развеивание магии", 2) and TrySteal("target") then return end
 
-    if IsReadySpell("Пронизывающий ветер") and HasBuff("Отражение заклинания", 1, "target") and HasBuff("Отражение заклинания", 0.1, "target") then
-        if IsPlayerCasting() then oexecute("SpellStopCasting()") end
-        DoSpell("Пронизывающий ветер", "target") 
-        return 
-    end
-
     if IsShift() and IsReadySpell("Землетрясение") then
         DoSpell("Землетрясение", "target")
         return
     end
 
-    if IsAOE(2) and IsPlayerCasting(0.3) and IsSpellInUse("Молния") then oexecute("SpellStopCasting()") end
+    if IsAOE(2) and IsPlayerCasting(0.3) and IsSpellInUse("Молния") then 
+        StopCast("!Молния->AOE")
+    end
 
     if (HasMyDebuff("Огненный шок", 5,"target") or IsAOE(2)) and (select(4, HasBuff("Щит молний")) or 0) > 6 and DoSpell("Земной шок") then return end
     
     if HasBuff("Волна лавы") then
-        if IsPlayerCasting(0.3) and IsSpellInUse("Молния") then oexecute("SpellStopCasting()") end
+        if IsPlayerCasting(0.3) and IsSpellInUse("Молния") then 
+            StopCast("!Молния->Волна лавы")
+        end
         DoSpell("Выброс лавы")
         return
     end

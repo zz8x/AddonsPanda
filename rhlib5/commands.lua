@@ -25,7 +25,7 @@ function DoCommand(cmd, ...)
     if spell and endTime then 
         t = endTime/1000 + d
         if Commands[cmd].Timer and Commands[cmd].Timer == t then 
-            oexecute("SpellStopCasting()")
+            StopCast("Commands")
             t = GetTime() + d
         end
     end
@@ -124,7 +124,7 @@ function AttackCommand(cmd, param)
     if IsAlt() then 
         target = "focus" 
     end
-    if not CanAttack(target) then chat('!Attack ' .. target) return end
+    if not CanAttack(target) then chat('!Attack: ' .. CanAttackInfo .. " @" .. target ) return end
     if nil ~= param then 
         DoCommand(cmd, param, target)
     else

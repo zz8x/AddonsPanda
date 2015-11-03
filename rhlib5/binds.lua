@@ -25,7 +25,9 @@ end
 if Paused == nil then Paused = false end
 -- Отключаем авторотацию, при повторном нажатии останавливаем каст (если есть)
 function AutoRotationOff()
-    if IsPlayerCasting() and Paused then oexecute("SpellStopCasting()") end
+    if IsPlayerCasting() and Paused then 
+        StopCast("Pause")
+    end
     Paused = true
     TimerReset('Attack')
     oexecute("StopAttack()")

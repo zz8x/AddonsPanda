@@ -26,7 +26,9 @@ local function interruptTarget(target, canStopCasting)
     if not spell then return false end
 
     if (not channel and t < 1.8) and not HasTotem("Тотем заземления") and IsReadySpell("Тотем заземления", true) and IsHarmfulCast(spell) and InRange("Пронизывающий ветер", target) then
-        if canStopCasting  then oexecute("SpellStopCasting()") end
+        if canStopCasting  then 
+            StopCast("Interrupt")
+        end
          if DoSpell("Тотем заземления") then
             TimerStart('Interrupt')
             echo("Тотем заземления"..m)
@@ -35,7 +37,9 @@ local function interruptTarget(target, canStopCasting)
     end
 
     if not notinterrupt and not IsInterruptImmune(target)  and not HasTotem("Тотем заземления") and (channel or t < 0.8) and IsReadySpell("Пронизывающий ветер", true) and InRange("Пронизывающий ветер", target) then
-        if canStopCasting then oexecute("SpellStopCasting()") end
+        if canStopCasting then 
+            StopCast("Interrupt") 
+        end
         if DoSpell("Пронизывающий ветер", target) then
             echo("Пронизывающий ветер"..m)
             TimerStart('Interrupt')

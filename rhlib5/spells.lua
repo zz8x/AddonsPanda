@@ -29,6 +29,12 @@ AttachEvent('UNIT_SPELLCAST_START', CastLagTime)
 AttachEvent('UNIT_SPELLCAST_SENT', CastLagTime)
 
 ------------------------------------------------------------------------------------------------------------------
+function StopCast(info)
+    if not info then info = "?" end
+    chat("Stop Cast! ( ".. info .. " )")
+    oexecute("SpellStopCasting()") 
+end
+------------------------------------------------------------------------------------------------------------------
 function GetKickInfo(target) 
     if target == nil then target = "target" end 
     if not CanAttack(target) then return end
@@ -443,10 +449,11 @@ function UseSpell(spellName, target)
         if castInfo.StartTime and (GetTime() - castInfo.StartTime < 0.01) then
             if UnitExists(target) then
                 -- проверяем цель на соответствие реальной
-                if castInfo.TargetName and castInfo.TargetName ~= "" and castInfo.TargetName ~= UnitName(target) then 
+                if castInfo.TargetGUID  and castInfo.TargetGUID ~= UnitGUID(target) then 
+                    print(castInfo.TargetGUID, UnitGUID(target))
                     if dump then print("Цели не совпали", spellName) end
-                    oexecute("SpellStopCasting()")
-                    --chat("bad target", target, spellName)
+                    StopCast("Target Diff")
+                    --print("bad target", target, spellName)
                     if nil == badSpellTarget[spellName] then
                         badSpellTarget[spellName] = {}
                     end
