@@ -31,7 +31,7 @@ AttachEvent('UNIT_SPELLCAST_SENT', CastLagTime)
 ------------------------------------------------------------------------------------------------------------------
 function StopCast(info)
     if not info then info = "?" end
-    chat("Stop Cast! ( ".. info .. " )")
+    if Debug then chat("Stop Cast! ( ".. info .. " )") end
     oexecute("SpellStopCasting()") 
 end
 ------------------------------------------------------------------------------------------------------------------

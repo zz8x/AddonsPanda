@@ -161,7 +161,7 @@ function HealRotation()
 
     if TryDispelControl(members) then return end
 
-    if IsAlt() and h > 40 and TrySteal("target") then return end
+    if IsAlt() and h > 30 and TrySteal("target") then return end
     if h > 50 then
         if IsPvP() and not HasTotem("Опаляющий тотем") and (not HasTotem("Тотем магмы") and InMelee()) and DoSpell("Опаляющий тотем") then return end
         if not IsAttack() and not IsNotAttack("target") and h > 50 and IsPvP() then
